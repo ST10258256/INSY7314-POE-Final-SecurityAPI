@@ -21,6 +21,9 @@ jobs:
           command: |
             npx sonar-scanner \
               -Dsonar.sources=. \
+              -D"sonar.organization=st10258256" `
+              -D"sonar.projectKey=ST10258256_INSY7314-POE-Final-SecurityAPI" `
+              -D"sonar.cfamily.compile-commands=bw-output/compile_commands.json"
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN
 
