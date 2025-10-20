@@ -1,14 +1,14 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@5.0.2
-
 jobs:
   sonarcloud-analysis:
     docker:
       - image: sonarsource/sonar-scanner-cli:latest
+    resource_class: medium
     steps:
       - checkout
+
+      # Run SonarCloud analysis
       - run:
           name: Run SonarCloud Scan
           command: |
@@ -19,13 +19,9 @@ jobs:
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN
 
-
-
 workflows:
   version: 2
   build:
     jobs:
       - sonarcloud-analysis:
           context: SonarCloud
-
-
