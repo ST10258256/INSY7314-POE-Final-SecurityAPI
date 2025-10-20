@@ -14,7 +14,7 @@ jobs:
           command: |
             sonar-scanner \
               -Dsonar.projectKey=ST10258256_INSY7314-POE-Final-SecurityAPI \
-              -Dsonar.organization=ST10258256 \
+              -Dsonar.organization=st10258256 \
               -Dsonar.sources=. \
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN
