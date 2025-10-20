@@ -1,0 +1,27 @@
+version: 2.1
+
+jobs:
+  sonarcloud-analysis:
+    docker:
+      - image: sonarsource/sonar-scanner-cli:latest
+    resource_class: medium
+    steps:
+      - checkout
+
+      # Run SonarCloud analysis
+      - run:
+          name: Run SonarCloud Scan
+          command: |
+            sonar-scanner \
+              -Dsonar.projectKey=ST10258256_INSY7314-POE-Final-SecurityAPI \
+              -Dsonar.organization=st10258256 \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.login=$SONAR_TOKEN
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - sonarcloud-analysis:
+          context: SonarCloud
