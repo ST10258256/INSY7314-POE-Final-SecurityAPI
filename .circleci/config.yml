@@ -17,15 +17,18 @@ jobs:
           name: Install Sonar Scanner
           command: npm install sonar-scanner --save-dev
       - run:
+          name: Fix sonar-scanner permissions
+          command: chmod +x ./node_modules/sonar-scanner/bin/sonar-scanner
+      - run:
           name: Run SonarCloud Scan
           command: |
             npx sonar-scanner \
+              -Dsonar.projectKey=ST10258256_INSY7314-POE-Final-SecurityAPI \
+              -Dsonar.organization=ST10258256 \
               -Dsonar.sources=. \
-              -D"sonar.organization=st10258256" `
-              -D"sonar.projectKey=ST10258256_INSY7314-POE-Final-SecurityAPI" `
-              -D"sonar.cfamily.compile-commands=bw-output/compile_commands.json"
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN
+
 
 workflows:
   version: 2
