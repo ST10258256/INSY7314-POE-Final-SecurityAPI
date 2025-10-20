@@ -1,4 +1,4 @@
-# INSY7314-POE-PART_TWO-SecurityAPI
+# INSY7314-POE-Final-SecurityAPI
 
 ---
 ## Overview of the app
