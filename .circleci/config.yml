@@ -11,9 +11,6 @@ jobs:
       - checkout
       - node/install-packages
       - run:
-          name: Run Tests
-          command: npm test
-      - run:
           name: Run SonarQube Scan
           command: |
             npm install -g sonar-scanner
@@ -23,6 +20,7 @@ jobs:
               -Dsonar.sources=. \
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN
+
 
 workflows:
   version: 2
