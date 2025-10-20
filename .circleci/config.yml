@@ -6,28 +6,19 @@ orbs:
 jobs:
   sonarcloud-analysis:
     docker:
-      - image: cimg/node:18.17
-    resource_class: medium
+      - image: sonarsource/sonar-scanner-cli:latest
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: npm ci || npm install
-      - run:
-          name: Install Sonar Scanner
-          command: npm install sonar-scanner --save-dev
-      - run:
-          name: Fix sonar-scanner permissions
-          command: chmod +x ./node_modules/sonar-scanner/bin/sonar-scanner
-      - run:
           name: Run SonarCloud Scan
           command: |
-            npx sonar-scanner \
+            sonar-scanner \
               -Dsonar.projectKey=ST10258256_INSY7314-POE-Final-SecurityAPI \
               -Dsonar.organization=ST10258256 \
               -Dsonar.sources=. \
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN
+
 
 
 workflows:
