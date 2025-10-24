@@ -8,7 +8,7 @@ import axios from "axios";
  *   baseURL: "https://securityapi-x4rg.onrender.com/api"
  */
 const API = axios.create({
-  baseURL: "https://insy7314-poe-final-securityapi.onrender.com", 
+  baseURL: "https://insy7314-poe-final-securityapi.onrender.com/api", 
   headers: { "Content-Type": "application/json" },
 });
 
