@@ -24,7 +24,7 @@ export function sanitizeInput(value) {
   let previousSanitizedTag;
   do {
     previousSanitizedTag = sanitized;
-    sanitized = sanitized.replace(/<[^>]*>/g, "");
+    sanitized = sanitized.replaceAll(/<[^>]*>/g, "");
   } while (sanitized !== previousSanitizedTag);
 
   // Remove any script-like patterns and executable schemes (simple XSS defense)
@@ -33,12 +33,12 @@ export function sanitizeInput(value) {
   do {
     previousSanitized = sanitized;
     sanitized = sanitized
-      .replace(/(?:javascript:|data:|vbscript:)/gi, "")
-      .replace(/on\w+=/gi, "");
+      .replaceAll(/(?:javascript:|data:|vbscript:)/gi, "")
+      .replaceAll(/on\w+=/gi, "");
   } while (sanitized !== previousSanitized);
 
   // Allow normal ASCII + Unicode, just remove control characters
-  sanitized = sanitized.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  sanitized = sanitized.replaceAll(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, "");
 
   // Trim whitespace
   sanitized = sanitized.trim();
