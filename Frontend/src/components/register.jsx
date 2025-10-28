@@ -90,43 +90,56 @@ export default function Register() {
           <form onSubmit={handleSubmit}>
             <div className="row g-2">
               <div className="col-md-6">
-                <label className="form-label small">First Name</label>
+                <label className="form-label small">
+                  First Name
                 <input
+                  type="text"
                   name="firstName"
                   className="form-control"
                   placeholder="John"
                   value={form.firstName}
                   onChange={onChange}
                 />
+                </label>
+                
               </div>
 
               <div className="col-md-6">
-                <label className="form-label small">Last Name</label>
-                <input
+                <label className="form-label small">
+                  Last Name
+                  <input
+                  type="text"
                   name="lastName"
                   className="form-control"
                   placeholder="Doe"
                   value={form.lastName}
                   onChange={onChange}
-                />
+                  />
+                </label>
+                
               </div>
             </div>
 
             <div className="row g-2 mt-2">
               <div className="col-md-6">
-                <label className="form-label small">Username</label>
-                <input
+                <label className="form-label small">
+                  Username
+                  <input
+                  type = "text"
                   name="username"
                   className="form-control"
                   placeholder="username"
                   value={form.username}
                   onChange={onChange}
                 />
+                </label>
+                
               </div>
 
               <div className="col-md-6">
-                <label className="form-label small">Email</label>
-                <input
+                <label className="form-label small">
+                  Email
+                  <input
                   name="email"
                   type="email"
                   className="form-control"
@@ -134,37 +147,48 @@ export default function Register() {
                   value={form.email}
                   onChange={onChange}
                 />
+                </label>
+                
               </div>
             </div>
 
             <div className="row g-2 mt-2">
               <div className="col-md-6">
-                <label className="form-label small">ID Number</label>
-                <input
+                <label className="form-label small">
+                  ID Number
+                  <input
+                  type = "text"
                   name="idNumber"
                   className="form-control"
                   placeholder="ID Number"
                   value={form.idNumber}
                   onChange={onChange}
                 />
+                </label>
+                
               </div>
 
               <div className="col-md-6">
-                <label className="form-label small">Account Number</label>
-                <input
+                <label className="form-label small">
+                  Account Number
+                  <input
+                  type = "text"
                   name="accountNumber"
                   className="form-control"
                   placeholder="Account number"
                   value={form.accountNumber}
                   onChange={onChange}
                 />
+                </label>
+                
               </div>
             </div>
 
             <div className="row g-2 mt-2">
               <div className="col-md-6">
-                <label className="form-label small">Password</label>
-                <input
+                <label className="form-label small">
+                  Password
+                  <input
                   type="password"
                   name="password"
                   className="form-control"
@@ -172,6 +196,8 @@ export default function Register() {
                   value={form.password}
                   onChange={onChange}
                 />
+                  </label>
+                
               </div>
             </div>
 
