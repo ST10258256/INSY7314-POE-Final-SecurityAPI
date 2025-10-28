@@ -83,8 +83,9 @@ export default function PaymentForm() {
           <form onSubmit={submit}>
             <div className="row g-2">
               <div className="col-md-4">
-                <label className="form-label small">Amount</label>
-                <input
+                <label className="form-label small">
+                  Amount
+                  <input
                   name="amount"
                   type="number"
                   step="0.01"
@@ -92,11 +93,14 @@ export default function PaymentForm() {
                   value={form.amount}
                   onChange={onChange}
                 />
+                  </label>
+                
               </div>
 
               <div className="col-md-4">
-                <label className="form-label small">Currency</label>
-                <select
+                <label className="form-label small">
+                  Currency
+                  <select
                   name="currency"
                   className="form-select"
                   value={form.currency}
@@ -107,39 +111,50 @@ export default function PaymentForm() {
                   <option>EUR</option>
                   <option>GBP</option>
                 </select>
+                  </label>
+                
               </div>
 
               <div className="col-md-4">
-                <label className="form-label small">SWIFT code</label>
-                <input
+                <label className="form-label small">
+                  SWIFT code
+                  <input
                   name="swiftCode"
                   className="form-control"
                   value={form.swiftCode}
                   onChange={onChange}
                 />
+                  </label>
+                
               </div>
             </div>
 
             <div className="row g-2 mt-2">
               <div className="col-md-6">
-                <label className="form-label small">Beneficiary account number</label>
-                <input
+                <label className="form-label small">
+                  Beneficiary account number
+                  <input
                   name="accountNumber"
                   className="form-control"
                   value={form.accountNumber}
                   onChange={onChange}
                 />
+                  </label>
+                
               </div>
 
               <div className="col-md-6">
-                <label className="form-label small">Reference (optional)</label> {/* //////////////// */}
-                <input
+                <label className="form-label small">
+                  Reference (optional)
+                  <input
                   name="reference" ////////////////
                   className="form-control" ////////////////
                   placeholder="Payment reference" ////////////////
                   value={form.reference || ""} ////////////////
                   onChange={onChange} ////////////////
                 /> {/* //////////////// */}
+                  </label> {/* //////////////// */}
+                
               </div>
             </div>
 

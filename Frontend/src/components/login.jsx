@@ -74,30 +74,38 @@ export default function Login() {
           {error && <div className="alert alert-danger">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="mb-2">
-              <label className="form-label small">Account number</label>
-              <input
+              Account Number
+              <label className="form-label small">
+                <input 
+                type ="text"
                 name="accountNumber"
                 className="form-control"
                 placeholder="Enter account number"
                 value={form.accountNumber}
                 onChange={onChange}
-              />
+                />    
+              </label>
             </div>
 
             <div className="mb-2">
-              <label className="form-label small">Username</label>
-              <input
+              <label className="form-label small">
+                Username
+                <input
+                type ="text"
                 name="username"
                 className="form-control"
                 placeholder="Username"
                 value={form.username}
                 onChange={onChange}
               />
+              </label>
+              
             </div>
 
             <div className="mb-3">
-              <label className="form-label small">Password</label>
-              <input
+              <label className="form-label small">
+                Password
+                <input
                 type="password"
                 name="password"
                 className="form-control"
@@ -105,6 +113,7 @@ export default function Login() {
                 value={form.password}
                 onChange={onChange}
               />
+              </label>
             </div>
 
        
