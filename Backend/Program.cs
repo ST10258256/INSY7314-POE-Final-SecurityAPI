@@ -79,11 +79,9 @@ builder.WebHost.ConfigureKestrel(options =>
     if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
     {
         // Local development (HTTPS)
-        if (File.Exists("cert.pem") && File.Exists("key.pem"))
+        if (certificate != null)
         {
-            var localCert = X509Certificate2.CreateFromPemFile("cert.pem", "key.pem");
-            localCert = new X509Certificate2(localCert.Export(X509ContentType.Pfx));
-            options.ListenAnyIP(portToUse, listenOptions => listenOptions.UseHttps(localCert));
+            options.ListenAnyIP(portToUse, listenOptions => listenOptions.UseHttps(certificate));
         }
         else
         {
@@ -92,7 +90,7 @@ builder.WebHost.ConfigureKestrel(options =>
     }
     else
     {
-        // Render (HTTP only)
+        // Render (HTTP)
         options.ListenAnyIP(portToUse);
     }
 });
@@ -160,7 +158,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-//CORS CONFIG
+// CORS CONFIG
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactLocal", policy =>
@@ -179,19 +177,18 @@ builder.Services.AddCors(options =>
     });
 });
 
-// APP PIPELINE
 var app = builder.Build();
 
-// CSP headers (optional)
+// MIDDLEWARE PIPELINE
+app.UseRateLimiter();
+app.UseSecurityHeaders();
+
+// CSP (optional)
 app.UseCsp(options => options
     .DefaultSources(s => s.Self())
     .ScriptSources(s => s.Self())
     .StyleSources(s => s.Self())
 );
-
-app.UseRateLimiter();
-
-app.UseSecurityHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -201,6 +198,17 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AllowReactLocal");
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.StatusCode = 200;
+        await context.Response.CompleteAsync();
+        return;
+    }
+    await next();
+});
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
