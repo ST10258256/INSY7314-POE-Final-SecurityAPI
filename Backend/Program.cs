@@ -142,7 +142,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
         ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
-        IssuerSigningKey = key
+        IssuerSigningKey = key,
+        RoleClaimType = "role" 
     };
 });
 
@@ -213,6 +214,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseSwagger();
+
 app.UseHttpsRedirection();
 app.UseCors("AllowReactLocal");
 app.UseAuthentication();
@@ -221,7 +224,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Swagger
-app.UseSwagger();
+
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Banking API V1");
