@@ -147,7 +147,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
         ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
         IssuerSigningKey = key,
-        RoleClaimType = "role" 
+        RoleClaimType = "https://schemas.microsoft.com/ws/2008/06/identity/claims/role" 
     };
 });
 
