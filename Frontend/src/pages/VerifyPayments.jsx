@@ -17,8 +17,8 @@ export default function VerifyPayments() {
   try { parsedUser = rawUser ? JSON.parse(rawUser) : null; } catch { parsedUser = null; }
 
   const role = parsedUser?.role || parsedUser?.["https://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-  // const isAdmin = role === "Admin";
-  const isAdmin = true;
+  const isAdmin = role === "Admin";
+  //const isAdmin = true;
 
   useEffect(() => {
     if (!token) {
