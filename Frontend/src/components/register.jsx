@@ -157,7 +157,6 @@ export default function Register() {
                 <label className="form-label small">
                   ID Number
                   <input
-                  type = "text"
                   name="idNumber"
                   className="form-control"
                   placeholder="ID Number"
@@ -172,7 +171,6 @@ export default function Register() {
                 <label className="form-label small">
                   Account Number
                   <input
-                  type = "text"
                   name="accountNumber"
                   className="form-control"
                   placeholder="Account number"

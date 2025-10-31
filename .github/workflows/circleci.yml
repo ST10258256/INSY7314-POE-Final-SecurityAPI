@@ -20,8 +20,6 @@ jobs:
           name: Run SonarCloud Scan
           command: |
             npx sonar-scanner \
-              -Dsonar.projectKey=<your_project_key_here> \
-              -Dsonar.organization=<your_org_key_here> \
               -Dsonar.sources=. \
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN

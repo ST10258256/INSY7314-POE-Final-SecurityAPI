@@ -29,7 +29,7 @@ export default function Dashboard() {
 
       try {
         const resp = await axios.get(
-          "https://securityapi-x4rg.onrender.com/api/payments",
+          "https://insy7314-poe-final-securityapi.onrender.com/api/payments",
           {
             headers: {
               Authorization: `Bearer ${token}`
