@@ -2,6 +2,7 @@ using Backend.Repositories;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -10,6 +11,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using NWebsec.AspNetCore.Middleware;
 using Backend.Middleware;
+
 
 // Load .env file for local development
 Env.Load();
