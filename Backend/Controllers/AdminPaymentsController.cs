@@ -14,6 +14,17 @@ public class AdminPaymentsController : ControllerBase
         _paymentRepo = paymentRepo;
     }
 
+
+    [AllowAnonymous] // allow browser preflight without JWT
+    [HttpOptions]    // matches any OPTIONS request to this controller
+    public IActionResult Options()
+    {
+        Response.Headers.Add("Access-Control-Allow-Methods", "GET,PATCH,OPTIONS");
+        Response.Headers.Add("Access-Control-Allow-Headers", "Authorization, Content-Type");
+        Response.Headers.Add("Access-Control-Allow-Origin", "*"); // Or your allowed origin
+        return Ok();
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAllPayments()
     {
