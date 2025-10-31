@@ -221,7 +221,7 @@ if (!app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
-app.UseCors("AllowReactLocal");
+
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>

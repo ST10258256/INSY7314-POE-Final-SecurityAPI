@@ -1,75 +1,62 @@
-import React, { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-
-const API_BASE = "https://insy7314-poe-final-securityapi.onrender.com";
+import React, { useEffect, useState } from "react";
 
 export default function VerifyPayments() {
   const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [globalError, setGlobalError] = useState(null);
+  const [error, setError] = useState(null);
 
-  const navigate = useNavigate();
-  const token = localStorage.getItem("bank_token");
-  const rawUser = localStorage.getItem("bank_user");
+  const API_URL = "https://securityapi-x4rg.onrender.com/api/admin/adminpayments";
 
-  let parsedUser = null;
-  try { parsedUser = rawUser ? JSON.parse(rawUser) : null; } catch { parsedUser = null; }
-
-  const role = parsedUser?.role || parsedUser?.["https://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-  const isAdmin = role === "Admin";
-  //const isAdmin = true;
 
   useEffect(() => {
+    const token = localStorage.getItem("bank_token");
+
     if (!token) {
-      navigate("/login");
+      setError("No authentication token found.");
       return;
     }
 
-    async function fetchPayments() {
-      setLoading(true);
-      setGlobalError(null);
+    try {
+      const decoded = jwtDecode(token);
+      console.log("Decoded token:", decoded);
 
-      // Determine correct endpoint
-      let url = "";
-      if (isAdmin) {
-        // Admin endpoint
-        url = `${API_BASE}/api/admin/adminpayments`;
-      } else if (role === "User") {
-        // User endpoint
-        url = `${API_BASE}/api/payments`;
-      } else {
-        setGlobalError("Your account role is invalid or missing. Cannot fetch payments.");
-        setLoading(false);
+      const role =
+        decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+      if (!role || role !== "Admin") {
+        setError("Your account role is invalid or missing. Cannot fetch payments.");
         return;
       }
 
-      try {
-        const resp = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
-        const data = Array.isArray(resp.data) ? resp.data : (resp.data?.payments ?? resp.data ?? []);
-        const mapped = data.map(p => ({ ...p, verifyState: "idle", verifyError: "" }));
-        setPayments(mapped);
-      } catch (err) {
-        console.error("Failed to load payments:", err);
-
-        const status = err?.response?.status;
-        if (status === 401) setGlobalError("Unauthorized (401). Please login again.");
-        else if (status === 403) setGlobalError("Forbidden (403). You do not have permission to view these payments.");
-        else if (status === 404) setGlobalError("Endpoint not found (404). Check the API route.");
-        else setGlobalError(`Error ${status ?? ""}: ${err?.message ?? "Unknown error"}`);
-      } finally {
-        setLoading(false);
-      }
+      axios
+        .get(`${API_URL}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => setPayments(response.data))
+        .catch((err) => {
+          console.error("Failed to load payments:", err);
+          setError("Failed to load payments. Check console for details.");
+        });
+    } catch (error) {
+      console.error("Failed to decode JWT:", error);
+      setError("Invalid token format.");
     }
+  }, []);
 
-    fetchPayments();
-  }, [token, navigate, role, isAdmin]);
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
+  if (!payments.length) return <div>Loading payments...</div>;
 
   return (
-    <div className="container py-4">
-      {globalError && <div className="alert alert-danger">{globalError}</div>}
-      {loading && <div>Loading payments…</div>}
-      {!loading && !globalError && <div>{payments.length} payments loaded.</div>}
+    <div>
+      <h2>Verified Payments</h2>
+      <ul>
+        {payments.map((p) => (
+          <li key={p.id}>
+            {p.amount} — {p.status}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
