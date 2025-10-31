@@ -191,8 +191,6 @@ app.UseCsp(options => options
 
 app.UseRateLimiter();
 
-app.UseCors("AllowReactLocal");
-
 app.UseSecurityHeaders();
 
 if (!app.Environment.IsDevelopment())
@@ -201,6 +199,8 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowReactLocal");
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
