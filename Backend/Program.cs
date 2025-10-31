@@ -12,18 +12,17 @@ using Microsoft.AspNetCore.Http;
 using NWebsec.AspNetCore.Middleware;
 using Backend.Middleware;
 
-
-// Load .env file for local development
+// Load environment variables
 Env.Load();
 Console.WriteLine(Environment.GetEnvironmentVariable("JWT_KEY"));
 
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); 
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// RATE LIMITER
 builder.Services.AddRateLimiter(options =>
 {
-    // login only allows 5 requests every 5 minutes
     options.AddFixedWindowLimiter("login", o =>
     {
         o.PermitLimit = 5;
@@ -32,7 +31,6 @@ builder.Services.AddRateLimiter(options =>
         o.QueueLimit = 0;
     });
 
-    // register only allows 3 requests every 10 minutes
     options.AddFixedWindowLimiter("register", o =>
     {
         o.PermitLimit = 3;
@@ -41,7 +39,6 @@ builder.Services.AddRateLimiter(options =>
         o.QueueLimit = 0;
     });
 
-    // custom rejection response
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = 429;
@@ -50,34 +47,29 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
-// Load SSL Certificate 
+// SSL CONFIG
 X509Certificate2? certificate = null;
-
-// Check for Render environment variables
 var certB64 = Environment.GetEnvironmentVariable("CERT_PEM");
 var keyB64 = Environment.GetEnvironmentVariable("KEY_PEM");
 
 if (!string.IsNullOrEmpty(certB64) && !string.IsNullOrEmpty(keyB64))
 {
-    // Decode Base64 and create certificate
     var certPem = Encoding.UTF8.GetString(Convert.FromBase64String(certB64));
     var keyPem = Encoding.UTF8.GetString(Convert.FromBase64String(keyB64));
-
     certificate = X509Certificate2.CreateFromPem(certPem, keyPem);
     certificate = new X509Certificate2(certificate.Export(X509ContentType.Pfx));
 }
 else if (File.Exists("cert.pem") && File.Exists("key.pem"))
 {
-    // Local development
     certificate = X509Certificate2.CreateFromPemFile("cert.pem", "key.pem");
     certificate = new X509Certificate2(certificate.Export(X509ContentType.Pfx));
 }
 else
 {
-    Console.WriteLine("No SSL certificate found. HTTPS will not work.");
+    Console.WriteLine("No SSL certificate found. HTTPS will not work locally.");
 }
 
-// Configure Kestrel 
+// KESTREL CONFIG
 var renderPort = Environment.GetEnvironmentVariable("PORT") ?? "5162";
 int.TryParse(renderPort, out var portToUse);
 if (portToUse == 0) portToUse = 5162;
@@ -86,45 +78,33 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
     {
-        // Local development: use HTTPS
+        // Local development (HTTPS)
         if (File.Exists("cert.pem") && File.Exists("key.pem"))
         {
-            var certificate = X509Certificate2.CreateFromPemFile("cert.pem", "key.pem");
-            certificate = new X509Certificate2(certificate.Export(X509ContentType.Pfx));
-
-            options.ListenAnyIP(portToUse, listenOptions =>
-            {
-                listenOptions.UseHttps(certificate); // HTTPS locally
-            });
+            var localCert = X509Certificate2.CreateFromPemFile("cert.pem", "key.pem");
+            localCert = new X509Certificate2(localCert.Export(X509ContentType.Pfx));
+            options.ListenAnyIP(portToUse, listenOptions => listenOptions.UseHttps(localCert));
         }
         else
         {
-            // fallback to HTTP if certs not found
             options.ListenAnyIP(portToUse);
         }
     }
     else
     {
-        // On Render: bind to Render's PORT (HTTP)
+        // Render (HTTP only)
         options.ListenAnyIP(portToUse);
     }
 });
 
-
-
-
-//  MongoDB & Repositories 
+// MONGO CONFIG
 var mongoConnection = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
 var mongoDbName = Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME");
-
-builder.Services.AddSingleton<IMongoDbContext>(sp =>
-    new MongoDbContext(mongoConnection!, mongoDbName!)
-);
-
+builder.Services.AddSingleton<IMongoDbContext>(sp => new MongoDbContext(mongoConnection!, mongoDbName!));
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<PaymentRepository>();
 
-// ---------- JWT ----------
+// JWT CONFIG
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")!;
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 var key = new SymmetricSecurityKey(keyBytes);
@@ -136,7 +116,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = true;
+    options.RequireHttpsMetadata = false;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -147,11 +127,11 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
         ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
         IssuerSigningKey = key,
-        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" 
+        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
     };
 });
 
-//Controllers & Swagger
+// CONTROLLERS + SWAGGER
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -180,7 +160,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS 
+//CORS CONFIG
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactLocal", policy =>
@@ -199,29 +179,28 @@ builder.Services.AddCors(options =>
     });
 });
 
+// APP PIPELINE
 var app = builder.Build();
 
+// CSP headers (optional)
 app.UseCsp(options => options
     .DefaultSources(s => s.Self())
     .ScriptSources(s => s.Self())
     .StyleSources(s => s.Self())
 );
 
-
 app.UseRateLimiter();
 
 app.UseCors("AllowReactLocal");
+
 app.UseSecurityHeaders();
-// Middleware 
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
 
-
-
 app.UseHttpsRedirection();
-
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -234,8 +213,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-
-
 
 app.Run();
