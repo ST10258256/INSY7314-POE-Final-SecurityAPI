@@ -87,10 +87,10 @@ export default function CreateUser() {
 
     try {
       const payload = { ...form };
-      const res = await registerCustomer(payload);
+      await registerCustomer(payload);
       setSuccess("User created successfully.");
       setError("");
-      setForm((prev) => ({ ...initial }));
+      setForm(initial);
     } catch (err) {
       const msg = err?.response?.data || err?.message || "Failed to create user";
       setError(msg);
