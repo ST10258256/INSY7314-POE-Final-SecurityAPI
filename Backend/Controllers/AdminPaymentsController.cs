@@ -21,7 +21,7 @@ public class AdminPaymentsController : ControllerBase
     {
         Response.Headers.Add("Access-Control-Allow-Methods", "GET,PATCH,OPTIONS");
         Response.Headers.Add("Access-Control-Allow-Headers", "Authorization, Content-Type");
-        Response.Headers.Add("Access-Control-Allow-Origin", "*"); // Or your allowed origin
+        Response.Headers.Add("Access-Control-Allow-Origin", "*"); 
         return Ok();
     }
 
