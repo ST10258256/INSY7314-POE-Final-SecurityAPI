@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE = "https://insy7314-poe-final-securityapi.onrender.com";
 
+
 function getPaymentId(p) {
   if (!p) return null;
   if (p.id) return p.id;
@@ -24,7 +25,45 @@ export default function VerifyPayments() {
   const navigate = useNavigate();
   const token = localStorage.getItem("bank_token");
 
-  useEffect(() => {
+  
+  const apiGet = async (path) => {
+    return axios.get(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  };
+
+  const apiPatch = async (path, body = {}) => {
+    return axios.patch(`${API_BASE}${path}`, body, { headers: { Authorization: `Bearer ${token}` } });
+  };
+
+  const friendlyError = (err) => {
+      const status = err?.response?.status;
+    const serverMsg = err?.response?.data ?? err?.message ?? "Unknown error";
+    if (status === 401) return "Unauthorized. Please login again.";
+    if (status === 403) return "Forbidden. Your token may not have permission to view all payments.";
+    if (status === 404) return "Endpoint not found (404). Check the API route.";
+    return typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg);
+  };
+
+  const initPayment = (p) => {
+     const statusRaw = (p.status || p.Status || "").toString();
+    const normalized = statusRaw.trim().toLowerCase();
+    const isProcessed = normalized === "processed";
+    const isVerifiedServer = normalized === "verified";
+
+    return {
+      ...p,
+      __verified: isVerifiedServer && !isProcessed,
+      __submitted: isProcessed,
+      __verifying: false,
+      __processing: false,
+      __verifyError: null,
+      __processError: null,
+    };
+  };
+
+  const updatePaymentAt = (index, patch) =>
+    setPayments(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
+
+    useEffect(() => {
     if (!token) {
       navigate("/login");
       return;
@@ -35,37 +74,13 @@ export default function VerifyPayments() {
       setLoading(true);
       setGlobalError(null);
       try {
-        const resp = await axios.get(`${API_BASE}/api/admin/adminpayments`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+          const resp = await apiGet("/api/admin/adminpayments");
         const data = Array.isArray(resp.data) ? resp.data : (resp.data?.payments ?? resp.data ?? []);
-
-        const mapped = (data || []).map(p => {
-          const statusRaw = (p.status || p.Status || "").toString();
-          const normalized = statusRaw.trim().toLowerCase();
-          const isProcessed = normalized === "processed";
-          const isVerifiedServer = normalized === "verified";
-
-          return {
-            ...p,
-            __verified: isVerifiedServer && !isProcessed, 
-            __submitted: isProcessed,                     
-            __verifying: false,
-            __processing: false,
-            __verifyError: null,
-            __processError: null,
-          };
-        });
-
+        const mapped = (data || []).map(initPayment);
         if (mounted) setPayments(mapped);
       } catch (err) {
         console.error("Failed to load payments:", err);
-        const status = err?.response?.status;
-        if (status === 401) setGlobalError("Unauthorized. Please login again.");
-        else if (status === 403) setGlobalError("Forbidden. Your token may not have permission to view all payments.");
-        else if (status === 404) setGlobalError("Endpoint not found (404). Check the API route.");
-        else setGlobalError(err?.response?.data ?? err?.message ?? "Failed to load payments.");
+        setGlobalError(friendlyError(err)); 
       } finally {
         if (mounted) setLoading(false);
       }
@@ -77,56 +92,51 @@ export default function VerifyPayments() {
 
 
   async function handleVerify(index) {
-    setPayments(prev => prev.map((p, i) => i === index ? { ...p, __verifying: true, __verifyError: null } : p));
-    const p = payments[index];
-    if (!p) return;
+    updatePaymentAt(index, { __verifying: true, __verifyError: null });
 
-  
+    const p = payments[index];
+    if (!p) {
+      updatePaymentAt(index, { __verifying: false, __verifyError: "Payment not found" });
+      return;
+    }
+
     if (p.__submitted) {
-      setPayments(prev => prev.map((it, i) => i === index ? { ...it, __verifying: false, __verifyError: "Already processed" } : it));
+      updatePaymentAt(index, { __verifying: false, __verifyError: "Already processed" });
       return;
     }
 
     const id = getPaymentId(p);
     if (!id) {
-      setPayments(prev => prev.map((it, i) => i === index ? { ...it, __verifying: false, __verifyError: "Missing payment id" } : it));
+      updatePaymentAt(index, { __verifying: false, __verifyError: "Missing payment id" });
       return;
     }
 
     try {
-      const url = `${API_BASE}/api/admin/adminpayments/${id}/verify`;
-      await axios.patch(url, {}, { headers: { Authorization: `Bearer ${token}` } });
-
     
-      setPayments(prev => prev.map((it, i) => i === index ? {
-        ...it,
+      await apiPatch(`/api/admin/adminpayments/${id}/verify`);
+      updatePaymentAt(index, {
         __verifying: false,
         __verified: true,
         __verifyError: null,
         status: "Verified"
-      } : it));
+      });
     } catch (err) {
       console.error("Verify failed:", err);
-      const serverMsg = err?.response?.data ?? err?.message ?? "Verify failed";
-      setPayments(prev => prev.map((it, i) => i === index ? {
-        ...it,
+      updatePaymentAt(index, {
         __verifying: false,
-        __verifyError: typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg)
-      } : it));
+        __verifyError: friendlyError(err) 
+      });
     }
   }
 
- 
+  
   async function handleProcess() {
-    const targets = payments
-      .map((p, i) => ({ p, i }))
-      .filter(x => x.p.__verified && !x.p.__submitted);
+    const targets = payments.map((p, i) => ({ p, i })).filter(x => x.p.__verified && !x.p.__submitted);
 
     if (targets.length === 0) {
       alert("No verified payments selected. Verify at least one before processing.");
       return;
     }
-
     if (!window.confirm(`Process ${targets.length} verified payment(s)?`)) return;
 
     setSubmitting(true);
@@ -135,10 +145,10 @@ export default function VerifyPayments() {
    
     setPayments(prev => prev.map(p => (p.__verified && !p.__submitted ? { ...p, __processing: true, __processError: null } : p)));
 
-    const promises = targets.map(({ p, i }) => {
+       const promises = targets.map(({ p, i }) => {
       const id = getPaymentId(p);
-      const url = `${API_BASE}/api/admin/adminpayments/${id}/process`;
-      return axios.patch(url, {}, { headers: { Authorization: `Bearer ${token}` } })
+      const path = `/api/admin/adminpayments/${id}/process`;
+      return apiPatch(path)
         .then(resp => ({ index: i, ok: true, resp }))
         .catch(err => ({ index: i, ok: false, err }));
     });
@@ -149,7 +159,7 @@ export default function VerifyPayments() {
     let failureCount = 0;
     const failures = [];
 
-    setPayments(prev => {
+       setPayments(prev => {
       const copy = [...prev];
       results.forEach(r => {
         const idx = r.index;
@@ -159,25 +169,25 @@ export default function VerifyPayments() {
             ...copy[idx],
             __processing: false,
             __submitted: true,
-            __verified: false, 
+            __verified: false,
             __processError: null,
             status: "Processed"
           };
         } else {
           failureCount++;
           const serverMsg = r?.err?.response?.data ?? r?.err?.message ?? "Process failed";
+          const msg = typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg);
           copy[idx] = {
             ...copy[idx],
             __processing: false,
-            __processError: typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg)
+            __processError: msg
           };
-          failures.push({ index: idx, id: getPaymentId(copy[idx]), message: copy[idx].__processError });
+          failures.push({ index: idx, id: getPaymentId(copy[idx]), message: msg });
         }
       });
       return copy;
     });
 
-    
     if (failureCount === 0) {
       setModal({
         open: true,
@@ -199,12 +209,12 @@ export default function VerifyPayments() {
 
   const verifiedCount = payments.filter(p => p.__verified && !p.__submitted).length;
 
-  return (
+   return (
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h3 className="mb-0">Verify Pending Payments</h3>
-               </div>
+        </div>
 
         <div className="text-end">
           <button className="btn btn-outline-secondary me-2" onClick={() => window.location.reload()}>Refresh</button>
@@ -289,7 +299,6 @@ export default function VerifyPayments() {
                         </td>
 
                         <td className="text-end">
-                          {/*  */}
                           {!p.__submitted ? (
                             <button
                               className={`btn btn-sm ${isVerified ? "btn-success" : "btn-outline-primary"}`}
@@ -312,7 +321,7 @@ export default function VerifyPayments() {
         </div>
       </div>
 
-      {/* */}
+      {/*  */}
       {modal.open && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 1050,
