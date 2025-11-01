@@ -3,8 +3,34 @@ import { useNavigate } from "react-router-dom";
 import { registerCustomer } from "../api";
 import * as validation from "../utils/validation";
 
+function Field({ label, name, type = "text", placeholder = "", value, onChange, options }) {
+  return (
+    <div className="col-md-6">
+      <label className="form-label small">{label}</label>
+      {options ? (
+        <select name={name} className="form-select" value={value} onChange={onChange}>
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          name={name}
+          type={type}
+          className="form-control"
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function CreateUser() {
-  const [form, setForm] = useState({
+  const initial = {
     firstName: "",
     lastName: "",
     username: "",
@@ -12,8 +38,10 @@ export default function CreateUser() {
     idNumber: "",
     accountNumber: "",
     password: "",
-    role: "Employee", 
-  });
+    role: "Employee",
+  };
+
+  const [form, setForm] = useState(initial);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,8 +50,18 @@ export default function CreateUser() {
   function onChange(e) {
     const { name, value } = e.target;
     const sanitizedValue = validation.sanitizeInput(value);
-    setForm(prev => ({ ...prev, [name]: sanitizedValue }));
+    setForm((prev) => ({ ...prev, [name]: sanitizedValue }));
   }
+
+  const validationRules = [
+    { field: "firstName", kind: "fullName", message: "Invalid first name — 2-20 letters, no numbers/special characters." },
+    { field: "lastName", kind: "fullName", message: "Invalid last name — 2-20 letters, no numbers/special characters." },
+    { field: "username", kind: "username", message: "Invalid username — 3-20 characters, no special characters." },
+    { field: "email", kind: "email", message: "Invalid email address." },
+    { field: "idNumber", kind: "idNumber", message: "Invalid ID number — 6-13 digits." },
+    { field: "accountNumber", kind: "accountNumber", message: "Invalid account number — 5-15 digits." },
+    { field: "password", kind: "password", message: "Invalid password — 8-20 characters, safe symbols allowed." },
+  ];
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -31,44 +69,15 @@ export default function CreateUser() {
     setSuccess("");
     setLoading(true);
 
-   
-    if (!validation.validateInput(form.firstName, "fullName")) {
-      setError("Invalid first name — 2-20 letters, no numbers/special characters.");
-      setLoading(false);
-      return;
-    }
-    if (!validation.validateInput(form.lastName, "fullName")) {
-      setError("Invalid last name — 2-20 letters, no numbers/special characters.");
-      setLoading(false);
-      return;
-    }
-    if (!validation.validateInput(form.username, "username")) {
-      setError("Invalid username — 3-20 characters, no special characters.");
-      setLoading(false);
-      return;
-    }
-    if (!validation.validateInput(form.email, "email")) {
-      setError("Invalid email address.");
-      setLoading(false);
-      return;
-    }
-    if (!validation.validateInput(form.idNumber, "idNumber")) {
-      setError("Invalid ID number — 6-13 digits.");
-      setLoading(false);
-      return;
-    }
-    if (!validation.validateInput(form.accountNumber, "accountNumber")) {
-      setError("Invalid account number — 5-15 digits.");
-      setLoading(false);
-      return;
-    }
-    if (!validation.validateInput(form.password, "password")) {
-      setError("Invalid password — 8-20 characters, safe symbols allowed.");
-      setLoading(false);
-      return;
+    for (const rule of validationRules) {
+      const value = form[rule.field];
+      if (!validation.validateInput(value, rule.kind)) {
+        setError(rule.message);
+        setLoading(false);
+        return;
+      }
     }
 
-   
     const allowedRoles = ["Admin", "User", "Employee"];
     if (!allowedRoles.includes(form.role)) {
       setError("Invalid role selected.");
@@ -77,20 +86,11 @@ export default function CreateUser() {
     }
 
     try {
-     
       const payload = { ...form };
       const res = await registerCustomer(payload);
-
       setSuccess("User created successfully.");
       setError("");
-
-      if (res?.user) {
-      
-      }
-
-   
-      setForm(prev => ({ ...prev, password: "", username: "", email: "", idNumber: "", accountNumber: "", firstName: "", lastName: "" }));
-
+      setForm((prev) => ({ ...initial }));
     } catch (err) {
       const msg = err?.response?.data || err?.message || "Failed to create user";
       setError(msg);
@@ -113,55 +113,29 @@ export default function CreateUser() {
 
           <form onSubmit={handleSubmit}>
             <div className="row g-2">
-              <div className="col-md-6">
-                <label className="form-label small">First Name</label>
-                <input name="firstName" className="form-control" placeholder="John" value={form.firstName} onChange={onChange} />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label small">Last Name</label>
-                <input name="lastName" className="form-control" placeholder="Doe" value={form.lastName} onChange={onChange} />
-              </div>
+              <Field label="First Name" name="firstName" placeholder="John" value={form.firstName} onChange={onChange} />
+              <Field label="Last Name" name="lastName" placeholder="Doe" value={form.lastName} onChange={onChange} />
             </div>
 
             <div className="row g-2 mt-2">
-              <div className="col-md-6">
-                <label className="form-label small">Username</label>
-                <input name="username" className="form-control" placeholder="username" value={form.username} onChange={onChange} />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label small">Email</label>
-                <input name="email" type="email" className="form-control" placeholder="you@example.com" value={form.email} onChange={onChange} />
-              </div>
+              <Field label="Username" name="username" placeholder="username" value={form.username} onChange={onChange} />
+              <Field label="Email" name="email" type="email" placeholder="you@example.com" value={form.email} onChange={onChange} />
             </div>
 
             <div className="row g-2 mt-2">
-              <div className="col-md-6">
-                <label className="form-label small">ID Number</label>
-                <input name="idNumber" className="form-control" placeholder="ID Number" value={form.idNumber} onChange={onChange} />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label small">Account Number</label>
-                <input name="accountNumber" className="form-control" placeholder="Account number" value={form.accountNumber} onChange={onChange} />
-              </div>
+              <Field label="ID Number" name="idNumber" placeholder="ID Number" value={form.idNumber} onChange={onChange} />
+              <Field label="Account Number" name="accountNumber" placeholder="Account number" value={form.accountNumber} onChange={onChange} />
             </div>
 
             <div className="row g-2 mt-2 align-items-end">
-              <div className="col-md-6">
-                <label className="form-label small">Password</label>
-                <input type="password" name="password" className="form-control" placeholder="Choose a password" value={form.password} onChange={onChange} />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label small">Role</label>
-                <select name="role" className="form-select" value={form.role} onChange={onChange}>
-                  <option>Admin</option>
-                  <option>User</option>
-                  <option>Employee</option>
-                </select>
-              </div>
+              <Field label="Password" name="password" type="password" placeholder="Choose a password" value={form.password} onChange={onChange} />
+              <Field
+                label="Role"
+                name="role"
+                options={["Admin", "User", "Employee"]}
+                value={form.role}
+                onChange={onChange}
+              />
             </div>
 
             <div className="mt-3 d-flex gap-2">
@@ -178,4 +152,3 @@ export default function CreateUser() {
     </div>
   );
 }
-
