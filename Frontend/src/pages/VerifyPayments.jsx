@@ -17,8 +17,10 @@ function getPaymentId(p) {
 export default function VerifyPayments() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showThanksModal, setShowThanksModal] = useState(false);
+  const [globalError, setGlobalError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [modal, setModal] = useState({ open: false, title: "", message: "", details: null });
+
   const navigate = useNavigate();
   const token = localStorage.getItem("bank_token");
 
@@ -31,28 +33,39 @@ export default function VerifyPayments() {
     let mounted = true;
     async function fetchAll() {
       setLoading(true);
-      setError(null);
-
+      setGlobalError(null);
       try {
         const resp = await axios.get(`${API_BASE}/api/admin/adminpayments`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = Array.isArray(resp.data) ? resp.data : (resp.data?.payments ?? resp.data ?? []);
-        
-        const mapped = (data || []).map(p => ({
-          ...p,
-          __verified: false,      
-          __submitted: false,     
-        }));
+
+        const mapped = (data || []).map(p => {
+          const statusRaw = (p.status || p.Status || "").toString();
+          const normalized = statusRaw.trim().toLowerCase();
+          const isProcessed = normalized === "processed";
+          const isVerifiedServer = normalized === "verified";
+
+          return {
+            ...p,
+            __verified: isVerifiedServer && !isProcessed, 
+            __submitted: isProcessed,                     
+            __verifying: false,
+            __processing: false,
+            __verifyError: null,
+            __processError: null,
+          };
+        });
+
         if (mounted) setPayments(mapped);
       } catch (err) {
         console.error("Failed to load payments:", err);
         const status = err?.response?.status;
-        if (status === 401) setError("Unauthorized. Please log in again.");
-        else if (status === 403) setError("Forbidden. Your account may not have permission to view all payments.");
-        else if (status === 404) setError("Endpoint not found (404). Check the API route.");
-        else setError(err?.response?.data ?? err?.message ?? "Failed to load payments.");
+        if (status === 401) setGlobalError("Unauthorized. Please login again.");
+        else if (status === 403) setGlobalError("Forbidden. Your token may not have permission to view all payments.");
+        else if (status === 404) setGlobalError("Endpoint not found (404). Check the API route.");
+        else setGlobalError(err?.response?.data ?? err?.message ?? "Failed to load payments.");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -62,24 +75,126 @@ export default function VerifyPayments() {
     return () => { mounted = false; };
   }, [token, navigate]);
 
-  function toggleVerify(index) {
-    setPayments(prev => prev.map((p, i) => i === index ? { ...p, __verified: !p.__verified } : p));
-  }
 
-  function handleSubmitToSwift() {
-    const count = payments.filter(p => p.__verified && !p.__submitted).length;
-    if (count === 0) {
-      alert("No verified payments selected. Verify at least one before submitting.");
+  async function handleVerify(index) {
+    setPayments(prev => prev.map((p, i) => i === index ? { ...p, __verifying: true, __verifyError: null } : p));
+    const p = payments[index];
+    if (!p) return;
+
+  
+    if (p.__submitted) {
+      setPayments(prev => prev.map((it, i) => i === index ? { ...it, __verifying: false, __verifyError: "Already processed" } : it));
       return;
     }
 
-    
-    setShowThanksModal(true);
+    const id = getPaymentId(p);
+    if (!id) {
+      setPayments(prev => prev.map((it, i) => i === index ? { ...it, __verifying: false, __verifyError: "Missing payment id" } : it));
+      return;
+    }
+
+    try {
+      const url = `${API_BASE}/api/admin/adminpayments/${id}/verify`;
+      await axios.patch(url, {}, { headers: { Authorization: `Bearer ${token}` } });
 
     
-    setPayments(prev =>
-      prev.map(p => (p.__verified && !p.__submitted ? { ...p, __submitted: true } : p))
-    );
+      setPayments(prev => prev.map((it, i) => i === index ? {
+        ...it,
+        __verifying: false,
+        __verified: true,
+        __verifyError: null,
+        status: "Verified"
+      } : it));
+    } catch (err) {
+      console.error("Verify failed:", err);
+      const serverMsg = err?.response?.data ?? err?.message ?? "Verify failed";
+      setPayments(prev => prev.map((it, i) => i === index ? {
+        ...it,
+        __verifying: false,
+        __verifyError: typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg)
+      } : it));
+    }
+  }
+
+ 
+  async function handleProcess() {
+    const targets = payments
+      .map((p, i) => ({ p, i }))
+      .filter(x => x.p.__verified && !x.p.__submitted);
+
+    if (targets.length === 0) {
+      alert("No verified payments selected. Verify at least one before processing.");
+      return;
+    }
+
+    if (!window.confirm(`Process ${targets.length} verified payment(s)?`)) return;
+
+    setSubmitting(true);
+    setGlobalError(null);
+
+   
+    setPayments(prev => prev.map(p => (p.__verified && !p.__submitted ? { ...p, __processing: true, __processError: null } : p)));
+
+    const promises = targets.map(({ p, i }) => {
+      const id = getPaymentId(p);
+      const url = `${API_BASE}/api/admin/adminpayments/${id}/process`;
+      return axios.patch(url, {}, { headers: { Authorization: `Bearer ${token}` } })
+        .then(resp => ({ index: i, ok: true, resp }))
+        .catch(err => ({ index: i, ok: false, err }));
+    });
+
+    const results = await Promise.all(promises);
+
+    let successCount = 0;
+    let failureCount = 0;
+    const failures = [];
+
+    setPayments(prev => {
+      const copy = [...prev];
+      results.forEach(r => {
+        const idx = r.index;
+        if (r.ok) {
+          successCount++;
+          copy[idx] = {
+            ...copy[idx],
+            __processing: false,
+            __submitted: true,
+            __verified: false, 
+            __processError: null,
+            status: "Processed"
+          };
+        } else {
+          failureCount++;
+          const serverMsg = r?.err?.response?.data ?? r?.err?.message ?? "Process failed";
+          copy[idx] = {
+            ...copy[idx],
+            __processing: false,
+            __processError: typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg)
+          };
+          failures.push({ index: idx, id: getPaymentId(copy[idx]), message: copy[idx].__processError });
+        }
+      });
+      return copy;
+    });
+
+    
+    if (failureCount === 0) {
+      setModal({
+        open: true,
+        title: "Thanks — Sent to SWIFT",
+        message: `Successfully processed ${successCount} payment(s).`,
+        details: null
+      });
+    } else {
+      setModal({
+        open: true,
+        title: "Partial failure",
+        message: `Processed ${successCount} payment(s). ${failureCount} failed.`,
+        details: failures
+      });
+    }
+
+    setSubmitting(false);
   }
 
   const verifiedCount = payments.filter(p => p.__verified && !p.__submitted).length;
@@ -89,22 +204,21 @@ export default function VerifyPayments() {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h3 className="mb-0">Verify Pending Payments</h3>
-          <small className="text-muted">Check SWIFT codes, mark rows Verified, then Submit to SWIFT.</small>
-        </div>
+               </div>
 
         <div className="text-end">
           <button className="btn btn-outline-secondary me-2" onClick={() => window.location.reload()}>Refresh</button>
           <button
             className="btn btn-success"
-            disabled={verifiedCount === 0}
-            onClick={handleSubmitToSwift}
+            disabled={verifiedCount === 0 || submitting}
+            onClick={handleProcess}
           >
-            {`Submit to SWIFT${verifiedCount > 0 ? ` (${verifiedCount})` : ""}`}
+            {submitting ? "Processing…" : `Process${verifiedCount > 0 ? ` (${verifiedCount})` : ""}`}
           </button>
         </div>
       </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {globalError && <div className="alert alert-danger">{globalError}</div>}
 
       <div className="card shadow-sm">
         <div className="card-body p-0">
@@ -136,8 +250,8 @@ export default function VerifyPayments() {
                     const swift = (p.swiftCode || p.SWIFTCode || p.swift || p.SWIFT || "").toString() || "-";
                     const amount = p.amount ?? p.Amount ?? p.AmountPaid ?? "-";
                     const currency = p.currency || p.Currency || "ZAR";
-                    const status = p.__submitted ? "Submitted to SWIFT" : (p.status || p.Status || "Pending");
-                    const verified = Boolean(p.__verified && !p.__submitted);
+                    const status = p.__submitted ? "Processed" : (p.status || p.Status || "Pending");
+                    const isVerified = Boolean(p.__verified && !p.__submitted);
 
                     return (
                       <tr key={id}>
@@ -159,24 +273,33 @@ export default function VerifyPayments() {
 
                         <td style={{ minWidth: 160 }}>
                           {p.__submitted ? (
-                            <span className="badge bg-success">Submitted ✓</span>
-                          ) : verified ? (
+                            <span className="badge bg-success">Processed ✓</span>
+                          ) : p.__verifying ? (
+                            <span className="badge bg-info">Verifying…</span>
+                          ) : p.__processing ? (
+                            <span className="badge bg-info">Processing…</span>
+                          ) : isVerified ? (
                             <span className="badge bg-success">Verified ✓</span>
                           ) : (
                             <span className="badge bg-secondary">{status}</span>
                           )}
+
+                          {p.__verifyError && <div className="small text-danger mt-1">{p.__verifyError}</div>}
+                          {p.__processError && <div className="small text-danger mt-1">{p.__processError}</div>}
                         </td>
 
                         <td className="text-end">
+                          {/*  */}
                           {!p.__submitted ? (
                             <button
-                              className={`btn btn-sm ${verified ? "btn-success" : "btn-outline-primary"}`}
-                              onClick={() => toggleVerify(i)}
+                              className={`btn btn-sm ${isVerified ? "btn-success" : "btn-outline-primary"}`}
+                              onClick={() => handleVerify(i)}
+                              disabled={p.__verifying || p.__processing}
                             >
-                              {verified ? "Verified" : "Verify"}
+                              {p.__verifying ? "Verifying…" : (isVerified ? "Verified" : "Verify")}
                             </button>
                           ) : (
-                            <button className="btn btn-sm btn-outline-secondary" disabled>Submitted</button>
+                            <button className="btn btn-sm btn-outline-secondary" disabled>Processed</button>
                           )}
                         </td>
                       </tr>
@@ -189,32 +312,32 @@ export default function VerifyPayments() {
         </div>
       </div>
 
-      {/* simple modal / popup */}
-      {showThanksModal && (
+      {/* */}
+      {modal.open && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 1050,
           display: "flex", alignItems: "center", justifyContent: "center",
           background: "rgba(0,0,0,0.45)"
         }}>
-          <div style={{ width: 380, borderRadius: 12, background: "#fff", boxShadow: "0 8px 30px rgba(0,0,0,0.25)" }}>
+          <div style={{ width: 420, borderRadius: 12, background: "#fff", boxShadow: "0 8px 30px rgba(0,0,0,0.25)" }}>
             <div style={{ padding: 22 }}>
-              <h4 className="mb-2">Thanks — Sent to SWIFT</h4>
-              <p className="mb-3 text-muted">Your verified payment(s) have been marked as submitted. The UI task is complete.</p>
+              <h4 className="mb-2">{modal.title}</h4>
+              <p className="mb-3 text-muted">{modal.message}</p>
+
+              {modal.details && modal.details.length > 0 && (
+                <div className="mb-3">
+                  <strong>Failures:</strong>
+                  <ul>
+                    {modal.details.map((f, idx) => (
+                      <li key={idx}><code>{f.id}</code>: {f.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="d-flex justify-content-end gap-2">
-                <button
-                  className="btn btn-outline-secondary"
-                  onClick={() => setShowThanksModal(false)}
-                >
-                  Close
-                </button>
-
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setShowThanksModal(false)}
-                >
-                  OK
-                </button>
+                <button className="btn btn-outline-secondary" onClick={() => setModal({ open: false, title: "", message: "", details: null })}>Close</button>
+                <button className="btn btn-primary" onClick={() => setModal({ open: false, title: "", message: "", details: null })}>OK</button>
               </div>
             </div>
           </div>
