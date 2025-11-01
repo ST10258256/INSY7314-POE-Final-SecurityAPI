@@ -15,6 +15,8 @@ import Login from "./components/login";
 import Dashboard from "./pages/Dashboard";
 import PaymentForm from "./pages/PaymentForm";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import CreateUser from "./pages/CreateUser";
+import VerifyPayments from "./pages/VerifyPayments";
 
 export default function App() {
   return (
@@ -31,7 +33,24 @@ export default function App() {
 
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-
+          <Route path="/create-user" element={<CreateUser />} />
+          <Route path="/verify-payments" element={<VerifyPayments />} />
+          <Route
+            path="/verify-payments"
+            element={
+              <ProtectedRoute>
+                <VerifyPayments />
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/create-user"
+            element={
+              <ProtectedRoute>
+                <CreateUser />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -59,3 +78,5 @@ export default function App() {
     </div>
   );
 }
+
+

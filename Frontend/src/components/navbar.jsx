@@ -70,6 +70,7 @@ export default function Navbar() {
                   </NavLink>
                 </li>
               </>
+              
             ) : (
               <>
                 <li className="nav-item">
@@ -83,11 +84,24 @@ export default function Navbar() {
                     Make Payment
                   </NavLink>
                 </li>
-              </>
+             
+
+                <li className="nav-item">
+      <NavLink className="nav-link" to="/create-user">Create User</NavLink>
+    </li>
+
+<li className="nav-item">
+  <NavLink className="nav-link" to="/verify-payments">Verify Payments</NavLink>
+</li>
+
+  </>
             )}
+            
           </ul>
         </div>
       </div>
     </nav>
   );
 }
+
+
