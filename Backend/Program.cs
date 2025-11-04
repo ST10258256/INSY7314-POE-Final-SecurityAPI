@@ -80,31 +80,21 @@ if (portToUse == 0) portToUse = 5162;
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
+    if (certificate != null)
     {
-        // Local development: use HTTPS
-        if (File.Exists("cert.pem") && File.Exists("key.pem"))
+        options.ListenAnyIP(portToUse, listenOptions =>
         {
-            var certificate = X509Certificate2.CreateFromPemFile("cert.pem", "key.pem");
-            certificate = new X509Certificate2(certificate.Export(X509ContentType.Pfx));
-
-            options.ListenAnyIP(portToUse, listenOptions =>
-            {
-                listenOptions.UseHttps(certificate); // HTTPS locally
-            });
-        }
-        else
-        {
-            // fallback to HTTP if certs not found
-            options.ListenAnyIP(portToUse);
-        }
+            listenOptions.UseHttps(certificate); // HTTPS
+        });
     }
     else
     {
-        // On Render: bind to Render's PORT (HTTP)
+        // fallback to HTTP if cert not found
+        Console.WriteLine("⚠️ No SSL certificate found. Traffic will be served over HTTP.");
         options.ListenAnyIP(portToUse);
     }
 });
+
 
 
 
@@ -204,20 +194,32 @@ app.UseCsp(options => options
 
 
 app.UseRateLimiter();
-
 app.UseCors("AllowReactLocal");
 app.UseSecurityHeaders();
+
 // Middleware 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseHsts();
+    app.UseHsts();                // HSTS first
+    app.UseHttpsRedirection();    // then HTTPS redirection
+
+    // Custom redirect only for non-HTTPS requests
+    app.Use(async (context, next) =>
+    {
+        if (!context.Request.IsHttps)
+        {
+            var httpsUrl = $"https://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
+            context.Response.Redirect(httpsUrl, permanent: true);
+        }
+        else
+        {
+            await next();
+        }
+    });
 }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowReactLocal");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 // Swagger
@@ -229,3 +231,4 @@ app.UseSwaggerUI(c =>
 });
 
 app.Run();
+
