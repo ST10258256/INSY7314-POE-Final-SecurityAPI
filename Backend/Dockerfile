@@ -2,17 +2,19 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy only the project file and restore dependencies
+# Copy csproj and restore dependencies
 COPY Backend.csproj ./
 RUN dotnet restore
 
-# Copy only the app source files (exclude tests)
+# Copy all source code folders (exclude tests)
 COPY Controllers/ ./Controllers/
 COPY Models/ ./Models/
+COPY Repositories/ ./Repositories/
+COPY Services/ ./Services/
 COPY Program.cs ./Program.cs
-# ... copy any other folders/files required by your main project
+# Add any other folders needed by the main project
 
-# Publish only the Backend project
+# Publish
 RUN dotnet publish Backend.csproj -c Release -o /app
 
 # Stage 2: Runtime
