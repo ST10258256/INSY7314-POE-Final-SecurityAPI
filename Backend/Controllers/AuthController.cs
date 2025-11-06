@@ -8,9 +8,6 @@ using Backend.Repositories;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.RateLimiting;
 
-
-
-
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -24,7 +21,7 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
-[EnableRateLimiting("register")]
+    [EnableRateLimiting("register")]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
@@ -64,7 +61,26 @@ public class AuthController : ControllerBase
         // Create password hash
         PasswordHelper.CreatePasswordHash(dto.Password, out byte[] hash, out byte[] salt);
 
-        // Create user object
+        // Normalize/validate role server-side and default to "User"
+        var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Admin", "User", "Employee" };
+        var roleToSet = "User"; // default for public registration
+
+        if (!string.IsNullOrWhiteSpace(dto.Role))
+        {
+            var candidate = dto.Role.Trim();
+            if (allowedRoles.Contains(candidate))
+            {
+                // Normalize casing to Title case (Admin, User, Employee)
+                roleToSet = candidate.Substring(0, 1).ToUpperInvariant() + candidate.Substring(1).ToLowerInvariant();
+            }
+            else
+            {
+                // If provided role is invalid, reject (safer than silently accepting arbitrary roles)
+                return BadRequest(new { Errors = new[] { "Role must be Admin, User or Employee" } });
+            }
+        }
+
+        // Create user object (ensure Role is set)
         var user = new User
         {
             Email = dto.Email,
@@ -75,14 +91,15 @@ public class AuthController : ControllerBase
             AccountNumber = dto.AccountNumber,
             PasswordHash = hash,
             PasswordSalt = salt,
-         
+            Role = roleToSet
         };
 
         await _userRepo.CreateAsync(user);
-        return Ok("User registered successfully");
+        // return created role so caller can confirm
+        return Ok(new { Message = "User registered successfully", Role = user.Role });
     }
 
-[EnableRateLimiting("login")]
+    [EnableRateLimiting("login")]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
@@ -106,27 +123,27 @@ public class AuthController : ControllerBase
 
     private string GenerateJwtToken(User user)
     {
-    var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")!;
-    var keyBytes = Encoding.UTF8.GetBytes(jwtKey); 
-    var key = new SymmetricSecurityKey(keyBytes);
-    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")!;
+        var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+        var key = new SymmetricSecurityKey(keyBytes);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-    var claims = new[]
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id!),
-        new Claim(ClaimTypes.Email, user.Email),
-        new Claim(ClaimTypes.Role, user.Role),
-        new Claim("account_number", user.AccountNumber)
-    };
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id!),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role ?? "User"),
+            new Claim("account_number", user.AccountNumber)
+        };
 
-    var token = new JwtSecurityToken(
-        issuer: Environment.GetEnvironmentVariable("JWT_ISSUER"),
-        audience: Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
-        claims: claims,
-        expires: DateTime.UtcNow.AddMinutes(int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIREMINUTES") ?? "60")),
-        signingCredentials: creds
-    );
+        var token = new JwtSecurityToken(
+            issuer: Environment.GetEnvironmentVariable("JWT_ISSUER"),
+            audience: Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(int.Parse(Environment.GetEnvironmentVariable("JWT_EXPIREMINUTES") ?? "60")),
+            signingCredentials: creds
+        );
 
-    return new JwtSecurityTokenHandler().WriteToken(token);
-    }   
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 }

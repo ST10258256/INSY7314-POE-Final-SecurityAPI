@@ -68,7 +68,7 @@ export default function Register() {
 
     try {
       // <-- Only change: include role: "user" in payload so API/DB receives the role
-      const res = await registerCustomer({ ...form, role: "user" });
+      const res = await registerCustomer({ ...form, role: "User" });
       setSuccess("Registered successfully! Redirecting...");
 
       if (res?.user) localStorage.setItem("bank_user", JSON.stringify(res.user));
