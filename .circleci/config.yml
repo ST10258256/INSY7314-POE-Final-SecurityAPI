@@ -20,20 +20,18 @@ jobs:
               -Dsonar.login=$SONAR_TOKEN \
               -Dsonar.coverage.exclusions=** 
 
-  trivy-scan:
+    trivy-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
-        run: docker build -t securityapi ./Backend
-
-      - name: Run Trivy scan
+      - name: Install Trivy
         run: |
-          docker run --rm aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
+      - name: Run Trivy filesystem scan
+        run: trivy fs --exit-code 1 --severity HIGH,CRITICAL ./Backend
+
 
   newman-tests:
     docker:
