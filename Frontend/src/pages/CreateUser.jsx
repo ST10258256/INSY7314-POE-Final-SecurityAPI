@@ -74,7 +74,7 @@ export default function CreateUser() {
 
       const res = await registerCustomer(payload);
 
-      setSuccess(`User created successfully (role: Employee).`);
+      setSuccess(`User created successfully `);
       setError("");
       setForm(initial);
     } catch (err) {
