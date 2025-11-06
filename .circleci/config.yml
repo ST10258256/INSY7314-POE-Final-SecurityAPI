@@ -25,10 +25,7 @@ jobs:
       - run:
           name: Install Trivy
           command: |
-            sudo apt-get update -y
-            sudo apt-get install -y curl
-            sudo curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-              | sudo sh -s -- -b /usr/local/bin
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       - run:
           name: Build Docker Image
           command: docker build -t securityapi ./Backend
@@ -37,18 +34,24 @@ jobs:
           command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
 
   newman-tests:
-    docker:
-      - image: cimg/dotnet:8.0-node
+    machine: true
     steps:
       - checkout
       - run:
-          name: Install Newman
-          command: npm install -g newman
+          name: Install .NET SDK
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y dotnet-sdk-8.0
       - run:
-          name: Start Backend + Wait + Run Tests
+          name: Install Node + Newman
+          command: |
+            sudo apt-get install -y nodejs npm
+            sudo npm install -g newman
+      - run:
+          name: Start Backend + Run Newman Tests
           command: |
             dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
-            echo "Waiting for backend to boot..."
+            echo "Waiting for backend..."
             until curl -s http://localhost:5162/swagger/index.html > /dev/null; do sleep 2; done
             echo "Backend ready. Running Newman tests..."
             newman run Backend.Tests/api/banking-api.postman_collection.json \
