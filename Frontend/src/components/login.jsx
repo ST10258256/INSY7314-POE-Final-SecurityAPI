@@ -1,6 +1,7 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { loginCustomer } from "../api"; 
+import { useNavigate, Link } from "react-router-dom";
+import { loginCustomer } from "../api";
 import { validateInput, sanitizeInput } from "../utils/validation";
 
 export default function Login() {
@@ -10,7 +11,6 @@ export default function Login() {
   const navigate = useNavigate();
 
   function onChange(e) {
-    // sanitize input on change
     const sanitizedValue = sanitizeInput(e.target.value);
     setForm(prev => ({ ...prev, [e.target.name]: sanitizedValue }));
   }
@@ -20,7 +20,6 @@ export default function Login() {
     setError("");
     setLoading(true);
 
-    // Frontend validation
     if (!validateInput(form.accountNumber, "accountNumber")) {
       setError("Invalid account number format");
       setLoading(false);
@@ -45,7 +44,7 @@ export default function Login() {
       };
 
       const res = await loginCustomer(loginPayload);
-      const token = res?.token || res?.Token; 
+      const token = res?.token || res?.Token;
       if (!token) {
         setError("No token returned from server");
         setLoading(false);
@@ -74,38 +73,32 @@ export default function Login() {
           {error && <div className="alert alert-danger">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="mb-2">
-              Account Number
-              <label className="form-label small">
-                <input 
-                type ="text"
+              <label className="form-label small">Account Number</label>
+              <input
+                type="text"
                 name="accountNumber"
                 className="form-control"
                 placeholder="Enter account number"
                 value={form.accountNumber}
                 onChange={onChange}
-                />    
-              </label>
+              />
             </div>
 
             <div className="mb-2">
-              <label className="form-label small">
-                Username
-                <input
-                type ="text"
+              <label className="form-label small">Username</label>
+              <input
+                type="text"
                 name="username"
                 className="form-control"
-                placeholder="Username"
+                placeholder="Username (optional)"
                 value={form.username}
                 onChange={onChange}
               />
-              </label>
-              
             </div>
 
             <div className="mb-3">
-              <label className="form-label small">
-                Password
-                <input
+              <label className="form-label small">Password</label>
+              <input
                 type="password"
                 name="password"
                 className="form-control"
@@ -113,15 +106,16 @@ export default function Login() {
                 value={form.password}
                 onChange={onChange}
               />
-              </label>
             </div>
-
-       
 
             <button className="btn btn-primary w-100" type="submit" disabled={loading}>
               {loading ? "Signing in…" : "Login"}
             </button>
           </form>
+
+          <div className="mt-3 text-center">
+            <Link to="/forgot-password" className="small">Forgot password?</Link>
+          </div>
         </div>
       </div>
     </div>

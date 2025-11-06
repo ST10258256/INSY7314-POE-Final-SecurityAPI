@@ -31,5 +31,5 @@ public class User
     public byte[] PasswordSalt { get; set; }
 
     [BsonElement("role")]
-    public string Role { get; set; } = "User";
+    public string Role { get; set; } 
 }
