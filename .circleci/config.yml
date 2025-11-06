@@ -19,7 +19,7 @@ jobs:
               -Dsonar.coverage.exclusions=**
 
   trivy-scan:
-    machine: {}   
+    machine: {}
     steps:
       - checkout
       - run:
@@ -30,24 +30,36 @@ jobs:
           command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
 
   newman-tests:
-  docker:
-    - image: cimg/dotnet:8.0-node
-  steps:
-    - checkout
-    - run:
-        name: Install Newman
-        command: npm install -g newman
-    - run:
-        name: Start Backend
-        command: |
-          echo "Starting Backend..."
-          dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
-    - run:
-        name: Wait for Backend
-        command: |
-          echo "Waiting for backend to be ready..."
-          until curl -s http://localhost:5162/swagger/index.html >
-
+    docker:
+      - image: cimg/dotnet:8.0-node
+    steps:
+      - checkout
+      - run:
+          name: Install Newman
+          command: npm install -g newman
+      - run:
+          name: Start Backend
+          command: |
+            dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
+      - run:
+          name: Wait for Backend to Start
+          command: |
+            echo "Waiting for the backend to be ready..."
+            until curl -s http://localhost:5162/swagger/index.html > /dev/null; do
+              sleep 2
+            done
+            echo "Backend is up!"
+      - run:
+          name: Run Newman API Tests
+          command: |
+            newman run Backend.Tests/api/banking-api.postman_collection.json \
+              -e Backend.Tests/api/banking-api.postman_environment.json \
+              --reporters cli,junit \
+              --reporter-junit-export newman-results.xml
+      - store_artifacts:
+          path: newman-results.xml
+      - store_test_results:
+          path: newman-results.xml
 
 workflows:
   version: 2
@@ -60,5 +72,4 @@ workflows:
             - sonarcloud-analysis
       - newman-tests:
           requires:
-            - sonarcloud-analysis
             - trivy-scan
