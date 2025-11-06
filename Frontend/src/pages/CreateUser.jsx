@@ -72,7 +72,8 @@ export default function CreateUser() {
       const payload = { ...form, role: "Employee" };
       console.log("CreateUser payload ->", payload);
 
-      const res = await registerCustomer(payload);
+      // await the API call but don't assign to an unused variable
+      await registerCustomer(payload);
 
       setSuccess(`User created successfully `);
       setError("");
