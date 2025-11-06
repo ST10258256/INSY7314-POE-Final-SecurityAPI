@@ -20,7 +20,7 @@ jobs:
 
   trivy-scan:
   machine:
-    enabled: true 
+    enabled: true
   steps:
     - checkout
     - run:
