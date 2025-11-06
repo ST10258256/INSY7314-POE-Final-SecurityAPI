@@ -78,6 +78,7 @@ var renderPort = Environment.GetEnvironmentVariable("PORT") ?? "5162";
 int.TryParse(renderPort, out var portToUse);
 if (portToUse == 0) portToUse = 5162;
 
+//========ENSURE THAT ALL TRAFFIC IS SERVED OVER SSL============
 builder.WebHost.ConfigureKestrel(options =>
 {
     if (certificate != null)
@@ -165,6 +166,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+//========USE SECURE, SAMESITE, HTTPONLY FLAG FOR COOKIES/SESSIONS============
 builder.Services.AddDistributedMemoryCache(); // stores session in memory
 builder.Services.AddSession(options =>
 {
@@ -207,9 +209,11 @@ app.UseRateLimiter();
 app.UseCors("AllowReactLocal");
 app.UseSecurityHeaders();
 
-// Middleware 
+//========MIDDLEWARE TO FORCE HTTP ----> HTTPS============
 if (!app.Environment.IsDevelopment())
 {
+
+    //========ADD HSTS============
     app.UseHsts();                // HSTS first
     app.UseHttpsRedirection();    // then HTTPS redirection
 
