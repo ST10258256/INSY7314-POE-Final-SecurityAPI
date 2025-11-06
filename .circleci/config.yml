@@ -31,33 +31,30 @@ jobs:
 
   newman-tests:
     docker:
-      - image: cimg/node:20.0
+      - image: mcr.microsoft.com/dotnet/sdk:8.0
     steps:
       - checkout
       - run:
           name: Install Newman
           command: sudo npm install -g newman
       - run:
-          name: Run API Tests
+          name: Start Backend
           command: |
-            newman run Backend.Tests/api/banking-api.postman_collection.json \
-              -e Backend.Tests/api/banking-api.postman_environment.json \
-              --reporters cli,junit \
-              --reporter-junit-export newman-results.xml
-      - run:
-          name: Run Backend and Newman
-          command: |
+            echo "Starting Backend..."
             dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
-            echo "Waiting for backend..."
+      - run:
+          name: Wait for Backend
+          command: |
+            echo "Waiting for backend to be ready..."
             until curl -s http://localhost:5162/swagger/index.html > /dev/null; do sleep 2; done
-            echo "Backend ready, running Newman tests..."
+            echo "Backend is ready!"
+      - run:
+          name: Run Newman Tests
+          command: |
             newman run Backend.Tests/api/banking-api.postman_collection.json \
               -e Backend.Tests/api/banking-api.postman_environment.json \
               --reporters cli,junit \
               --reporter-junit-export newman-results.xml
-
-
-
 
 workflows:
   version: 2
