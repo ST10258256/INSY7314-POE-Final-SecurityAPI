@@ -47,7 +47,7 @@ export default function ForgotPassword() {
       const payload = form.email ? { email: form.email } : { accountNumber: form.accountNumber };
 
       // change endpoint if your backend uses a different path
-      const resp = await axios.post(`${API_BASE}/api/auth/forgot-password`, payload);
+    //  const resp = await axios.post(`${API_BASE}/api/auth/forgot-password`, payload);
 
       // Show a neutral success message — do not reveal whether account exists
       setInfo("If an account exists for the details you provided, you will receive a password reset email/notification shortly.");
