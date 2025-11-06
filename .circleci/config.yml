@@ -35,13 +35,15 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run API Tests with Newman
-          command: |
-            newman run tests/api/banking-api.postman_collection.json \
-              -e tests/api/banking-api.postman_environment.json \
-              --delay-request 200 \
-              --reporters cli,junit \
-              --reporter-junit-export test-results/newman-results.xml
+          name: Run Newman API Tests
+          working-directory: Backend.Tests
+          run: |
+            npm install -g newman
+            newman run banking-api.postman_collection.json \
+            -e banking-api.postman_environment.json \
+            --reporters cli,junit \
+            --reporter-junit-export newman-results.xml
+
 
 workflows:
   version: 2
