@@ -1,14 +1,16 @@
+# Backend/Dockerfile
+
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy only the main project file first
+# Copy the project file
 COPY Backend/Backend.csproj ./Backend/
 WORKDIR /src/Backend
 RUN dotnet restore
 
-# Copy only the backend project files (ignore tests)
-COPY Backend/. ./ 
+# Copy all backend source files
+COPY Backend/. ./
 RUN dotnet publish -c Release -o /app
 
 # Stage 2: Runtime
@@ -17,3 +19,4 @@ WORKDIR /app
 COPY --from=build /app ./
 EXPOSE 5000
 ENTRYPOINT ["dotnet", "Backend.dll"]
+
