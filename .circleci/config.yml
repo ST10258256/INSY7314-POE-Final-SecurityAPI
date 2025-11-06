@@ -41,7 +41,7 @@ jobs:
           name: Run API Tests
           command: |
             newman run Backend.Tests/api/banking-api.postman_collection.json \
-              -e Backend.Tests/banking-api.postman_environment.json \
+              -e Backend.Tests/api/banking-api.postman_environment.json \
               --reporters cli,junit \
               --reporter-junit-export newman-results.xml
 
