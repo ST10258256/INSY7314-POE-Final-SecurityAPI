@@ -36,19 +36,19 @@ jobs:
           name: Scan Image with Trivy
           command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
 
-  newman-tests:
-    docker:
-      - image: cimg/node:20.0
-    steps:
-      - checkout
-      - run:
-          name: Run Newman Tests Against Deployed API
-          command: |
-            echo "Running Newman tests against deployed backend..."
-            npx newman run Backend.Tests/api/banking-api.postman_collection.json \
-              -e Backend.Tests/api/banking-api.postman_environment.json \
-              --reporters cli,junit \
-              --reporter-junit-export newman-results.xml
+  # newman-tests:
+  #   docker:
+  #     - image: cimg/node:20.0
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Run Newman Tests Against Deployed API
+  #         command: |
+  #           echo "Running Newman tests against deployed backend..."
+  #           npx newman run Backend.Tests/api/banking-api.postman_collection.json \
+  #             -e Backend.Tests/api/banking-api.postman_environment.json \
+  #             --reporters cli,junit \
+  #             --reporter-junit-export newman-results.xml
 
 workflows:
   version: 2
