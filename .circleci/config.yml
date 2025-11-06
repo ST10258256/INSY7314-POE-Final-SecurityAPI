@@ -44,6 +44,12 @@ jobs:
               -e Backend.Tests/api/banking-api.postman_environment.json \
               --reporters cli,junit \
               --reporter-junit-export newman-results.xml
+      - run:
+          name: Start Backend
+          command: |
+           dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
+           sleep 10
+
 
 
 workflows:
