@@ -4,13 +4,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy the project file
-COPY Backend/Backend.csproj ./Backend/
-WORKDIR /src/Backend
+# Copy the project file and restore dependencies
+COPY Backend.csproj ./
 RUN dotnet restore
 
-# Copy all backend source files
-COPY Backend/. ./
+# Copy all source files
+COPY . ./
 RUN dotnet publish -c Release -o /app
 
 # Stage 2: Runtime
@@ -19,4 +18,3 @@ WORKDIR /app
 COPY --from=build /app ./
 EXPOSE 5000
 ENTRYPOINT ["dotnet", "Backend.dll"]
-
