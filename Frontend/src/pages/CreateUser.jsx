@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-//import { registerCustomer } from "../api";
+import { registerCustomer } from "../api";
 import * as validation from "../utils/validation";
 
 function Field({ label, name, type = "text", placeholder = "", value, onChange }) {
@@ -72,7 +72,7 @@ export default function CreateUser() {
       const payload = { ...form, role: "Employee" };
       console.log("CreateUser payload ->", payload);
 
-      //const res = await registerCustomer(payload);
+      const res = await registerCustomer(payload);
 
       setSuccess(`User created successfully `);
       setError("");
