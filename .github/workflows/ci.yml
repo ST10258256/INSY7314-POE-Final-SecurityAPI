@@ -35,7 +35,7 @@ jobs:
         run: dotnet build ../SecurityAPI.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test ../SecurityAPI.sln --no-build --verbosity normal
+        run: dotnet test Backend.Tests/Backend.Tests.csproj --no-build --verbosity normal
 
       - name: Check .NET Package Vulnerabilities
         run: dotnet list package --vulnerable || true
