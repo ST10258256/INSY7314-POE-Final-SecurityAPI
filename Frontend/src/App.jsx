@@ -11,7 +11,8 @@ import Navbar from "./components/navbar";
 
 import Register from "./components/register";
 import Login from "./components/login";
-
+import ForgotPassword from "./pages/ForgotPassword";
+//import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import PaymentForm from "./pages/PaymentForm";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -33,6 +34,8 @@ export default function App() {
 
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          {/* <Route path="/reset-password/:token" element={<ResetPassword />} /> */} 
           <Route path="/create-user" element={<CreateUser />} />
           <Route path="/verify-payments" element={<VerifyPayments />} />
           <Route
