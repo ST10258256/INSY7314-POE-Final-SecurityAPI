@@ -36,7 +36,7 @@ jobs:
       - checkout
       - run:
           name: Install Newman
-          command: npm install -g newman
+          command: sudo npm install -g newman
       - run:
           name: Run API Tests
           command: |
