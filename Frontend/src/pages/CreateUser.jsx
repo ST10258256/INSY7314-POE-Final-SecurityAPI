@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerCustomer } from "../api";
+//import { registerCustomer } from "../api";
 import * as validation from "../utils/validation";
 
 function Field({ label, name, type = "text", placeholder = "", value, onChange }) {
