@@ -29,14 +29,17 @@ jobs:
           name: Run Trivy scan
           command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
 
-  newman-tests:
+    newman-tests:
     docker:
-      - image: cimg/dotnet:8.0-node
+      - image: cimg/dotnet:8.0
     steps:
       - checkout
       - run:
-          name: Install Newman
-          command: npm install -g newman
+          name: Install Node + Newman
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y nodejs npm
+            npm install -g newman
       - run:
           name: Start Backend
           command: |
@@ -60,6 +63,7 @@ jobs:
           path: newman-results.xml
       - store_test_results:
           path: newman-results.xml
+
 
 workflows:
   version: 2
