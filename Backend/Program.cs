@@ -216,6 +216,8 @@ app.UseHttpsRedirection();
 app.UseCors("AllowReactLocal");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<Backend.Middleware.SuspiciousRequestLogging>();
+
 
 app.MapControllers();
 
