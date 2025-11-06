@@ -19,11 +19,13 @@ jobs:
               -Dsonar.coverage.exclusions=**
 
   trivy-scan:
-    docker:
-      - image: aquasec/trivy:latest
-    machine: true
+    machine: true  
     steps:
       - checkout
+      - run:
+          name: Install Trivy
+          command: |
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       - run:
           name: Build Docker Image
           command: docker build -t securityapi ./Backend
@@ -33,38 +35,23 @@ jobs:
 
   newman-tests:
     docker:
-      - image: cimg/dotnet:8.0
+      - image: cimg/dotnet:8.0-node
     steps:
       - checkout
       - run:
-          name: Install Node + Newman
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y nodejs npm
-            npm install -g newman
+          name: Install Newman
+          command: npm install -g newman
       - run:
-          name: Start Backend
+          name: Start Backend + Wait + Run Tests
           command: |
             dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
-      - run:
-          name: Wait for Backend Startup
-          command: |
-            echo "Waiting for API..."
-            until curl -s http://localhost:5162/swagger/index.html > /dev/null; do
-              sleep 2
-            done
-            echo "API Ready!"
-      - run:
-          name: Run Postman Tests
-          command: |
+            echo "Waiting for backend to boot..."
+            until curl -s http://localhost:5162/swagger/index.html > /dev/null; do sleep 2; done
+            echo "Backend ready Running Newman tests..."
             newman run Backend.Tests/api/banking-api.postman_collection.json \
               -e Backend.Tests/api/banking-api.postman_environment.json \
               --reporters cli,junit \
               --reporter-junit-export newman-results.xml
-      - store_artifacts:
-          path: newman-results.xml
-      - store_test_results:
-          path: newman-results.xml
 
 workflows:
   version: 2
