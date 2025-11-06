@@ -21,6 +21,7 @@ jobs:
   trivy-scan:
     docker:
       - image: aquasec/trivy:latest
+    machine: true
     steps:
       - checkout
       - run:
