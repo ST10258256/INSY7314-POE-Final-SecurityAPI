@@ -165,6 +165,16 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddDistributedMemoryCache(); // stores session in memory
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = ".SecurityAPI.Session";
+    options.Cookie.HttpOnly = true;        // cannot be accessed by JS
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // only over HTTPS
+    options.Cookie.SameSite = SameSiteMode.Strict;           // CSRF protection
+    options.IdleTimeout = TimeSpan.FromMinutes(30);         // optional
+});
+
 // CORS 
 builder.Services.AddCors(options =>
 {
@@ -218,6 +228,7 @@ if (!app.Environment.IsDevelopment())
     });
 }
 
+app.UseSession(); 
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -231,4 +242,3 @@ app.UseSwaggerUI(c =>
 });
 
 app.Run();
-
