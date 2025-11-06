@@ -38,19 +38,15 @@ jobs:
 
   newman-tests:
     docker:
-      - image: cimg/dotnet:8.0-node
+      - image: cimg/node:20.0
     steps:
       - checkout
       - run:
           name: Install Newman
           command: npm install -g newman
       - run:
-          name: Start Backend + Wait + Run Tests
+          name: Run API Tests against Deployed Backend
           command: |
-            dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
-            echo "Waiting for backend to boot..."
-            until curl -s http://localhost:5162/swagger/index.html > /dev/null; do sleep 2; done
-            echo "Backend ready. Running Newman tests..."
             newman run Backend.Tests/api/banking-api.postman_collection.json \
               -e Backend.Tests/api/banking-api.postman_environment.json \
               --reporters cli,junit \
