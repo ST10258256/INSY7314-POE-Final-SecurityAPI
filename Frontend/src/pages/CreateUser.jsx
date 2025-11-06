@@ -3,28 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { registerCustomer } from "../api";
 import * as validation from "../utils/validation";
 
-function Field({ label, name, type = "text", placeholder = "", value, onChange, options }) {
+function Field({ label, name, type = "text", placeholder = "", value, onChange }) {
   return (
     <div className="col-md-6">
       <label className="form-label small">{label}</label>
-      {options ? (
-        <select name={name} className="form-select" value={value} onChange={onChange}>
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <input
-          name={name}
-          type={type}
-          className="form-control"
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-        />
-      )}
+      <input
+        name={name}
+        type={type}
+        className="form-control"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -38,7 +28,6 @@ export default function CreateUser() {
     idNumber: "",
     accountNumber: "",
     password: "",
-    role: "Employee",
   };
 
   const [form, setForm] = useState(initial);
@@ -50,17 +39,17 @@ export default function CreateUser() {
   function onChange(e) {
     const { name, value } = e.target;
     const sanitizedValue = validation.sanitizeInput(value);
-    setForm((prev) => ({ ...prev, [name]: sanitizedValue }));
+    setForm(prev => ({ ...prev, [name]: sanitizedValue }));
   }
 
   const validationRules = [
-    { field: "firstName", kind: "fullName", message: "Invalid first name — 2-20 letters, no numbers/special characters." },
-    { field: "lastName", kind: "fullName", message: "Invalid last name — 2-20 letters, no numbers/special characters." },
-    { field: "username", kind: "username", message: "Invalid username — 3-20 characters, no special characters." },
+    { field: "firstName", kind: "fullName", message: "Invalid first name — 2-20 letters." },
+    { field: "lastName", kind: "fullName", message: "Invalid last name — 2-20 letters." },
+    { field: "username", kind: "username", message: "Invalid username — 3-20 characters." },
     { field: "email", kind: "email", message: "Invalid email address." },
     { field: "idNumber", kind: "idNumber", message: "Invalid ID number — 6-13 digits." },
     { field: "accountNumber", kind: "accountNumber", message: "Invalid account number — 5-15 digits." },
-    { field: "password", kind: "password", message: "Invalid password — 8-20 characters, safe symbols allowed." },
+    { field: "password", kind: "password", message: "Invalid password — 8+ characters." },
   ];
 
   async function handleSubmit(e) {
@@ -78,17 +67,15 @@ export default function CreateUser() {
       }
     }
 
-    const allowedRoles = ["Admin", "User", "Employee"];
-    if (!allowedRoles.includes(form.role)) {
-      setError("Invalid role selected.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const payload = { ...form };
+      // force role to Title-case "Employee"
+      const payload = { ...form, role: "Employee" };
+      console.log("CreateUser payload ->", payload);
+
+      // await the API call but don't assign to an unused variable
       await registerCustomer(payload);
-      setSuccess("User created successfully.");
+
+      setSuccess(`User created successfully `);
       setError("");
       setForm(initial);
     } catch (err) {
@@ -105,7 +92,7 @@ export default function CreateUser() {
         <div className="card-body p-4">
           <div className="mb-3 text-center">
             <h3 className="mb-0">Create user</h3>
-            <small className="text-muted">Create new Admin / Employee or User</small>
+            <small className="text-muted">This page creates users with the <strong>Employee</strong> role</small>
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
@@ -129,13 +116,6 @@ export default function CreateUser() {
 
             <div className="row g-2 mt-2 align-items-end">
               <Field label="Password" name="password" type="password" placeholder="Choose a password" value={form.password} onChange={onChange} />
-              <Field
-                label="Role"
-                name="role"
-                options={["Admin", "User", "Employee"]}
-                value={form.role}
-                onChange={onChange}
-              />
             </div>
 
             <div className="mt-3 d-flex gap-2">

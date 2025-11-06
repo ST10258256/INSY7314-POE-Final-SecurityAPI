@@ -29,4 +29,7 @@ public class RegisterDto
     [Required]
     [RegularExpression(@"^[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "Password must be at least 8 characters and may contain safe symbols")]
     public string Password { get; set; } = string.Empty;
+
+ 
+    public string? Role { get; set; } = null;
 }
