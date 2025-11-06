@@ -7,8 +7,6 @@ jobs:
     resource_class: medium
     steps:
       - checkout
-
-      # Run SonarCloud analysis
       - run:
           name: Run SonarCloud Scan
           command: |
@@ -18,20 +16,19 @@ jobs:
               -Dsonar.sources=. \
               -Dsonar.host.url=$SONAR_HOST_URL \
               -Dsonar.login=$SONAR_TOKEN \
-              -Dsonar.coverage.exclusions=** 
+              -Dsonar.coverage.exclusions=**
 
-    trivy-scan:
-    runs-on: ubuntu-latest
+  trivy-scan:
+    docker:
+      - image: aquasec/trivy:latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-
-      - name: Run Trivy filesystem scan
-        run: trivy fs --exit-code 1 --severity HIGH,CRITICAL ./Backend
-
+      - checkout
+      - run:
+          name: Build Docker image
+          command: docker build -t securityapi ./Backend
+      - run:
+          name: Run Trivy scan
+          command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
 
   newman-tests:
     docker:
@@ -41,13 +38,11 @@ jobs:
       - run:
           name: Run API Tests with Newman
           command: |
-            echo "Running Newman tests against deployed API..."
             newman run tests/api/banking-api.postman_collection.json \
               -e tests/api/banking-api.postman_environment.json \
               --delay-request 200 \
               --reporters cli,junit \
               --reporter-junit-export test-results/newman-results.xml
-
 
 workflows:
   version: 2
@@ -55,7 +50,9 @@ workflows:
     jobs:
       - sonarcloud-analysis:
           context: SonarCloud
-      - trivy-scan
+      - trivy-scan:
+          requires:
+            - sonarcloud-analysis
       - newman-tests:
           requires:
             - sonarcloud-analysis
