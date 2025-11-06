@@ -56,9 +56,7 @@ workflows:
     jobs:
       - sonarcloud-analysis:
           context: SonarCloud
-      - trivy-scan:
-          requires:
-            - sonarcloud-analysis
+      - trivy-scan
       # - newman-tests:
       #     requires:
       #       - trivy-scan
