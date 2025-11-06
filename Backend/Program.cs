@@ -85,16 +85,22 @@ builder.WebHost.ConfigureKestrel(options =>
     {
         options.ListenAnyIP(portToUse, listenOptions =>
         {
-            listenOptions.UseHttps(certificate); // HTTPS
+            listenOptions.UseHttps(httpsOptions =>
+            {
+                httpsOptions.ServerCertificate = certificate;
+                // Force only TLS 1.2 and TLS 1.3
+                httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
+                                            System.Security.Authentication.SslProtocols.Tls13;
+            });
         });
     }
     else
     {
-        // fallback to HTTP if cert not found
         Console.WriteLine("⚠️ No SSL certificate found. Traffic will be served over HTTP.");
         options.ListenAnyIP(portToUse);
     }
 });
+
 
 
 
