@@ -176,20 +176,21 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // CORS 
+//only allow requests from trusted frontend origins
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactLocal", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:5173",
+            "http://localhost:5173", //trsuted local react dev serer
             "https://localhost:5173",
             "http://localhost:5174",
             "https://localhost:5174",
             "https://securityapi-x4rg.onrender.com",
             "https://securityapi-site.onrender.com"
         )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
+        .WithHeaders("Content-Type", "Authorization")// Only allow these headers
+        .WithMethods("GET", "POST", "PATCH")// Only allow GET, POST, and PATCH requests
         .AllowCredentials();
     });
 });
@@ -217,6 +218,8 @@ app.UseHttpsRedirection();
 app.UseCors("AllowReactLocal");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<Backend.Middleware.SuspiciousRequestLogging>();
+
 
 app.MapControllers();
 
