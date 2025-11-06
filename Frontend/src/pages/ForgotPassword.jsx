@@ -1,6 +1,5 @@
 // src/pages/ForgotPassword.jsx
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { validateInput, sanitizeInput } from "../utils/validation";
 
@@ -47,10 +46,12 @@ export default function ForgotPassword() {
     try {
       // payload: prefer email if provided
       const payload = form.email ? { email: form.email } : { accountNumber: form.accountNumber };
-      // debug
-      console.log("ForgotPassword payload:", payload);
 
-      // If your backend has the route, uncomment the axios call. For safety, it's wrapped in try/catch.
+      // debug (keeps behavior non-destructive for now)
+      // console.log("ForgotPassword payload:", payload);
+
+      // If you want the request to actually hit the backend, uncomment and ensure axios is installed
+      // or use fetch. For linting we intentionally don't import axios here.
       // const resp = await axios.post(ENDPOINT, payload);
       // console.log("ForgotPassword server response:", resp.data);
 
@@ -228,7 +229,6 @@ export default function ForgotPassword() {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* responsive tweaks */
         @media (max-width: 420px) {
           .auth-card { padding: 1.6rem; border-radius: 12px; }
         }
@@ -247,7 +247,6 @@ export default function ForgotPassword() {
           <label className="label" htmlFor="forgotEmail">Email (preferred)</label>
           <div className="input-wrap">
             <span className="input-icon" aria-hidden>
-              {/* simple envelope icon (SVG) */}
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden>
                 <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v.217l-8 4.8-8-4.8V4z"/>
                 <path d="M0 6.383V12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.383l-7.555 4.533a.5.5 0 0 1-.49 0L0 6.383z"/>
@@ -268,7 +267,6 @@ export default function ForgotPassword() {
           <label className="label" htmlFor="forgotAccount">Account number (optional)</label>
           <div className="input-wrap">
             <span className="input-icon" aria-hidden>
-              {/* simple id/badge icon */}
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden>
                 <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3z"/>
                 <path fillRule="evenodd" d="M8 8a3 3 0 100-6 3 3 0 000 6z"/>
