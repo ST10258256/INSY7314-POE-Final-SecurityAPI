@@ -9,6 +9,10 @@ function Field({ label, name, type = "text", placeholder = "", value, onChange, 
       <label className="form-label small">{label}</label>
       {options ? (
         <select name={name} className="form-select" value={value} onChange={onChange}>
+          {/* added a disabled prompt option so the select never yields an empty/undefined value by accident */}
+          <option value="" disabled>
+            Select role
+          </option>
           {options.map((opt) => (
             <option key={opt} value={opt}>
               {opt}
@@ -48,9 +52,10 @@ export default function CreateUser() {
   const navigate = useNavigate();
 
   function onChange(e) {
-    const { name, value } = e.target;
-    const sanitizedValue = validation.sanitizeInput(value);
-    setForm((prev) => ({ ...prev, [name]: sanitizedValue }));
+    const { name, value, type } = e.target;
+    const isSelect = e.target.tagName === "SELECT" || type === "select-one";
+    const newValue = isSelect ? String(value) : validation.sanitizeInput(value);
+    setForm((prev) => ({ ...prev, [name]: newValue }));
   }
 
   const validationRules = [
@@ -79,14 +84,24 @@ export default function CreateUser() {
     }
 
     const allowedRoles = ["Admin", "User", "Employee"];
-    if (!allowedRoles.includes(form.role)) {
+    // force role to be a trimmed string, fallback to initial.role
+    const finalRole = String(form.role ?? "").trim() || initial.role;
+
+    if (!allowedRoles.includes(finalRole)) {
       setError("Invalid role selected.");
       setLoading(false);
       return;
     }
 
     try {
-      const payload = { ...form };
+      const payload = { ...form, role: finalRole };
+
+      // debug: inspect the payload in console and then check Network tab to confirm
+      // remove this console.log when you're done debugging
+      // (this will help confirm whether the client is sending role=null or the server is changing it)
+      // eslint-disable-next-line no-console
+      console.log("CreateUser payload ->", payload);
+
       await registerCustomer(payload);
       setSuccess("User created successfully.");
       setError("");
