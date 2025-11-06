@@ -65,13 +65,13 @@ public class AuthController : ControllerBase
         PasswordHelper.CreatePasswordHash(dto.Password, out byte[] hash, out byte[] salt);
 //////////////////////////////////////
 // Normalize/validate role server-side and default to "User"
-var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Admin", "User", "Employee" };
-var roleToSet = "User"; // default
-if (!string.IsNullOrWhiteSpace(dto.Role) && allowedRoles.Contains(dto.Role.Trim()))
-{
+///var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Admin", "User", "Employee" };
+///var roleToSet = "User"; // default
+///if (!string.IsNullOrWhiteSpace(dto.Role) && allowedRoles.Contains(dto.Role.Trim()))
+///{
     // ensure consistent casing as stored in DB (use Title case)
-    roleToSet = dto.Role.Trim().Substring(0,1).ToUpperInvariant() + dto.Role.Trim().Substring(1).ToLowerInvariant();
-} 
+ ///   roleToSet = dto.Role.Trim().Substring(0,1).ToUpperInvariant() + dto.Role.Trim().Substring(1).ToLowerInvariant();
+///} 
 /// ////////////////////////////////////////
         // Create user object
         var user = new User

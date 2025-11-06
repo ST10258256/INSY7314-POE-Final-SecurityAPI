@@ -9,9 +9,8 @@ function Field({ label, name, type = "text", placeholder = "", value, onChange, 
       <label className="form-label small">{label}</label>
       {options ? (
         <select name={name} className="form-select" value={value} onChange={onChange}>
-          {/* added a disabled prompt option so the select never yields an empty/undefined value by accident */}
           <option value="" disabled>
-            Select role
+            Select
           </option>
           {options.map((opt) => (
             <option key={opt} value={opt}>
@@ -42,6 +41,8 @@ export default function CreateUser() {
     idNumber: "",
     accountNumber: "",
     password: "",
+    // keep the initial role value in the state for completeness,
+    // but we will force "Employee" in the payload on submit
     role: "Employee",
   };
 
@@ -83,27 +84,18 @@ export default function CreateUser() {
       }
     }
 
-    const allowedRoles = ["Admin", "User", "Employee"];
-    // force role to be a trimmed string, fallback to initial.role
-    const finalRole = String(form.role ?? "").trim() || initial.role;
-
-    if (!allowedRoles.includes(finalRole)) {
-      setError("Invalid role selected.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const payload = { ...form, role: finalRole };
+      // FORCE role to "Employee" for all creates from this page
+      const payload = { ...form, role: "Employee" };
 
-      // debug: inspect the payload in console and then check Network tab to confirm
-      // remove this console.log when you're done debugging
-      // (this will help confirm whether the client is sending role=null or the server is changing it)
+      // debug: confirm payload in console and network tab
+      // remove this console.log after you're done testing
       // eslint-disable-next-line no-console
       console.log("CreateUser payload ->", payload);
 
       await registerCustomer(payload);
-      setSuccess("User created successfully.");
+
+      setSuccess("User created successfully (role: Employee).");
       setError("");
       setForm(initial);
     } catch (err) {
@@ -120,7 +112,7 @@ export default function CreateUser() {
         <div className="card-body p-4">
           <div className="mb-3 text-center">
             <h3 className="mb-0">Create user</h3>
-            <small className="text-muted">Create new Admin / Employee or User</small>
+            <small className="text-muted">This page creates users with the <strong>Employee</strong> role</small>
           </div>
 
           {error && <div className="alert alert-danger">{error}</div>}
@@ -144,13 +136,8 @@ export default function CreateUser() {
 
             <div className="row g-2 mt-2 align-items-end">
               <Field label="Password" name="password" type="password" placeholder="Choose a password" value={form.password} onChange={onChange} />
-              <Field
-                label="Role"
-                name="role"
-                options={["Admin", "User", "Employee"]}
-                value={form.role}
-                onChange={onChange}
-              />
+              {/* keep a hidden input so role is visible in DOM if needed for debugging */}
+              <input type="hidden" name="role" value="Employee" />
             </div>
 
             <div className="mt-3 d-flex gap-2">

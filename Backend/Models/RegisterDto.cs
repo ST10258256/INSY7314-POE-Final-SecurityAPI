@@ -30,6 +30,6 @@ public class RegisterDto
     [RegularExpression(@"^[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "Password must be at least 8 characters and may contain safe symbols")]
     public string Password { get; set; } = string.Empty;
 
-     [RegularExpression(@"^(Admin|User|Employee)$", ErrorMessage = "Role must be Admin, User or Employee")]
-    public string? Role { get; set; } = null;
+[RegularExpression(@"^(Admin|User|Employee)$", ErrorMessage = "Role must be Admin, User or Employee")]
+    public string? Role { get; set; } 
 }
