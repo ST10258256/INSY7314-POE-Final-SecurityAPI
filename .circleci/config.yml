@@ -19,17 +19,18 @@ jobs:
               -Dsonar.coverage.exclusions=**
 
   trivy-scan:
-    machine: {}
+    docker:
+      - image: aquasec/trivy:latest
     steps:
       - checkout
       - run:
-          name: Build Docker image
+          name: Build Docker Image
           command: docker build -t securityapi ./Backend
       - run:
-          name: Run Trivy scan
+          name: Scan Image with Trivy
           command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
 
-    newman-tests:
+  newman-tests:
     docker:
       - image: cimg/dotnet:8.0
     steps:
@@ -45,15 +46,15 @@ jobs:
           command: |
             dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
       - run:
-          name: Wait for Backend to Start
+          name: Wait for Backend Startup
           command: |
-            echo "Waiting for the backend to be ready..."
+            echo "Waiting for API..."
             until curl -s http://localhost:5162/swagger/index.html > /dev/null; do
               sleep 2
             done
-            echo "Backend is up!"
+            echo "API Ready!"
       - run:
-          name: Run Newman API Tests
+          name: Run Postman Tests
           command: |
             newman run Backend.Tests/api/banking-api.postman_collection.json \
               -e Backend.Tests/api/banking-api.postman_environment.json \
@@ -63,7 +64,6 @@ jobs:
           path: newman-results.xml
       - store_test_results:
           path: newman-results.xml
-
 
 workflows:
   version: 2
