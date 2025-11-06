@@ -19,23 +19,22 @@ jobs:
               -Dsonar.coverage.exclusions=**
 
   trivy-scan:
-  machine: true
-  steps:
-    - checkout
-    - run:
-        name: Install Trivy
-        command: |
-          sudo apt-get update -y
-          sudo apt-get install -y curl
-          sudo curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-            | sudo sh -s -- -b /usr/local/bin
-    - run:
-        name: Build Docker Image
-        command: docker build -t securityapi ./Backend
-    - run:
-        name: Scan Image with Trivy
-        command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
-
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Install Trivy
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y curl
+            sudo curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+              | sudo sh -s -- -b /usr/local/bin
+      - run:
+          name: Build Docker Image
+          command: docker build -t securityapi ./Backend
+      - run:
+          name: Scan Image with Trivy
+          command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
 
   newman-tests:
     docker:
@@ -51,7 +50,7 @@ jobs:
             dotnet run --project Backend/Backend.csproj --urls "http://0.0.0.0:5162" &
             echo "Waiting for backend to boot..."
             until curl -s http://localhost:5162/swagger/index.html > /dev/null; do sleep 2; done
-            echo "Backend ready Running Newman tests..."
+            echo "Backend ready. Running Newman tests..."
             newman run Backend.Tests/api/banking-api.postman_collection.json \
               -e Backend.Tests/api/banking-api.postman_environment.json \
               --reporters cli,junit \
