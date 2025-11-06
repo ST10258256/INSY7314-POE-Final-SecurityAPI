@@ -190,7 +190,7 @@ builder.Services.AddCors(options =>
             "https://securityapi-site.onrender.com"
         )
         .WithHeaders("Content-Type", "Authorization")// Only allow these headers
-        .WithMethods("GET", "POST")// Only allow GET and POST requests
+        .WithMethods("GET", "POST", "PATCH")// Only allow GET, POST, and PATCH requests
         .AllowCredentials();
     });
 });
