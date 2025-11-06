@@ -3,15 +3,16 @@ using MongoDB.Bson.Serialization.Attributes;
 
 public class User
 {
-    //new models
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; }
 
     [BsonElement("firstName")]
     public string FirstName { get; set; }
+
     [BsonElement("lastName")]
     public string LastName { get; set; }
+
     [BsonElement("username")]
     public string Username { get; set; }
 

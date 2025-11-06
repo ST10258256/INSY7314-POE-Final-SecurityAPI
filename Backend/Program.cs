@@ -184,7 +184,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5173", //trsuted local react dev serer
             "https://localhost:5173",
-            "http://localhost:5174",//alternate local port for testing
+            "http://localhost:5174",
+            "https://localhost:5174",
             "https://securityapi-x4rg.onrender.com",
             "https://securityapi-site.onrender.com"
         )

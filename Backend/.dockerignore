@@ -3,3 +3,5 @@ obj/
 *.user
 *.vs
 node_modules/
+Tests/
+Backend.Tests/
