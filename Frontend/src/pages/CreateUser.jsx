@@ -72,7 +72,7 @@ export default function CreateUser() {
       const payload = { ...form, role: "Employee" };
       console.log("CreateUser payload ->", payload);
 
-      const res = await registerCustomer(payload);
+      //const res = await registerCustomer(payload);
 
       setSuccess(`User created successfully `);
       setError("");

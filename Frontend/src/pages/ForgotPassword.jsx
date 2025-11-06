@@ -45,7 +45,7 @@ export default function ForgotPassword() {
 
     try {
       // payload: prefer email if provided
-      const payload = form.email ? { email: form.email } : { accountNumber: form.accountNumber };
+     // const payload = form.email ? { email: form.email } : { accountNumber: form.accountNumber };
 
       // debug (keeps behavior non-destructive for now)
       // console.log("ForgotPassword payload:", payload);
