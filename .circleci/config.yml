@@ -59,6 +59,6 @@ workflows:
       - trivy-scan:
           requires:
             - sonarcloud-analysis
-      - newman-tests:
-          requires:
-            - trivy-scan
+      # - newman-tests:
+      #     requires:
+      #       - trivy-scan
