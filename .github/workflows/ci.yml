@@ -37,6 +37,10 @@ jobs:
       - name: Test
         run: dotnet test ../SecurityAPI.sln --no-build --verbosity normal
 
+      - name: Check .NET Package Vulnerabilities
+        run: dotnet list package --vulnerable || true
+
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -62,3 +66,7 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Audit npm packages
+        run: npm audit --audit-level=moderate || true
+

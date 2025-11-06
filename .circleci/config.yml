@@ -20,9 +20,44 @@ jobs:
               -Dsonar.login=$SONAR_TOKEN \
               -Dsonar.coverage.exclusions=** 
 
+  trivy-scan:
+    docker:
+      - image: aquasec/trivy:latest
+    resource_class: small
+    steps:
+      - checkout
+
+      # Run Trivy scan
+      - run:
+          name: Run Trivy Scan
+          command: |
+            docker build -t securityapi ./Backend
+            trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
+
+  newman-tests:
+    docker:
+      - image: postman/newman:5.3.0
+    steps:
+      - checkout
+      - run:
+          name: Run API Tests with Newman
+          command: |
+            echo "Running Newman tests against deployed API..."
+            newman run tests/api/banking-api.postman_collection.json \
+              -e tests/api/banking-api.postman_environment.json \
+              --delay-request 200 \
+              --reporters cli,junit \
+              --reporter-junit-export test-results/newman-results.xml
+
+
 workflows:
   version: 2
   build:
     jobs:
       - sonarcloud-analysis:
           context: SonarCloud
+      - trivy-scan
+      - newman-tests:
+          requires:
+            - sonarcloud-analysis
+            - trivy-scan
