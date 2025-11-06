@@ -19,16 +19,16 @@ jobs:
               -Dsonar.coverage.exclusions=**
 
   trivy-scan:
-    docker:
-      - image: aquasec/trivy:latest
-    steps:
-      - checkout
-      - run:
-          name: Build Docker image
-          command: docker build -t securityapi ./Backend
-      - run:
-          name: Run Trivy scan
-          command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
+  machine: true
+  steps:
+    - checkout
+    - run:
+        name: Build Docker image
+        command: docker build -t securityapi ./Backend
+    - run:
+        name: Run Trivy scan
+        command: trivy image --exit-code 1 --severity HIGH,CRITICAL securityapi || true
+
 
   newman-tests:
     docker:
