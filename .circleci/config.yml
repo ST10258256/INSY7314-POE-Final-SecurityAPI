@@ -19,7 +19,8 @@ jobs:
               -Dsonar.coverage.exclusions=**
 
   trivy-scan:
-  machine: true
+  machine:
+    enabled: true 
   steps:
     - checkout
     - run:
