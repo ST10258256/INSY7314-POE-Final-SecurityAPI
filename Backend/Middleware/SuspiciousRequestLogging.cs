@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace Backend.Middleware
 {
+    
     // source reference: https://www.roundthecode.com/dotnet-tutorials/add-request-logging-database-asp-net-core-web-api
     public class SuspiciousRequestLogging
     {
