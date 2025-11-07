@@ -167,5 +167,18 @@ Locally, Kestrel uses the specified SSL certificate to serve HTTPS requests.
 In production (Render), HTTPS is handled by the platform’s reverse proxy,
 ensuring secure data in transit.
 
+```
+
+### 2. Redirect HTTP → HTTPS
+
+**Code Snippet:**
+
+```csharp
+app.UseHttpsRedirection();
+Explanation:
+This middleware automatically redirects any HTTP request to HTTPS. This ensures that all clients connect securely and prevents unencrypted traffic from reaching the API.
+```
+
+
 
 
