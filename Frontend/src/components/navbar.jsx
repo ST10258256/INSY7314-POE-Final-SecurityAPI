@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { getUserRole } from "../utils/auth"; 
+import { getUserRole } from "../utils/authRole"; 
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 function hasValidToken() {
