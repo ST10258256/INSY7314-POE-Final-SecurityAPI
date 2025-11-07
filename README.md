@@ -258,6 +258,17 @@ builder.Services.AddRateLimiter(options =>
 * Returns `429 Too Many Requests`
 * Includes `Retry-After` headers
 * Helps prevent brute-force attacks
+
+
+
+
+
+
+
+
+
+
+
   <img width="940" height="351" alt="image" src="https://github.com/user-attachments/assets/002f2085-08e0-436a-b0b7-201af34a1f53" />
 Pipeline: 
 okay so basically this is our GitHub pipeline, and it’s showing that all four checks have passed. that means everything ran successfully , no broken builds, no failed tests, no security issues detected. here’s what each one actually checks for:
