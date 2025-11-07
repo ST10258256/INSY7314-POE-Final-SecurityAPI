@@ -206,3 +206,46 @@ so no cookies or session state are used.
 The `secure`, `sameSite`, and `httpOnly` flags 
 apply only to cookie-based authentication. 
 JWT tokens are sent in headers, so these flags are not needed.
+
+### ADDITIONAL FEATURES
+
+1. HSTS (HTTP Strict Transport Security) Enhancement
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts(hsts => hsts.MaxAge(days: 365).IncludeSubdomains().Preload());
+}
+
+
+What it does:
+
+Enforces HTTPS for all browser requests for 1 year.
+
+Applies to all subdomains.
+
+Signals browsers to preload this site in their HSTS lists.
+
+Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
+
+2. Rate-Limiting Headers
+builder.Services.AddRateLimiter(options =>
+{
+    // Custom rejection response
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        context.HttpContext.Response.Headers.Add("Retry-After", "300"); // seconds
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync("{\"message\":\"Too many requests. Please try again later.\"}", token);
+    };
+});
+
+
+What it does:
+
+Limits requests to endpoints (login and register) to prevent brute-force attacks.
+
+Sends Retry-After headers to clients, indicating when they can retry.
+
+Returns a clear 429 response with JSON message.
+
+Fully additive and does not interfere with existing JWT authentication or other middleware.
