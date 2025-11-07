@@ -176,9 +176,33 @@ ensuring secure data in transit.
 ```csharp
 app.UseHttpsRedirection();
 Explanation:
-This middleware automatically redirects any HTTP request to HTTPS. This ensures that all clients connect securely and prevents unencrypted traffic from reaching the API.
+This middleware automatically redirects any HTTP request to HTTPS.
+This ensures that all clients connect securely and prevents unencrypted
+traffic from reaching the API.
 ```
 
+### 3. Apply HSTS (Strict Transport Security)
 
+**Code Snippet:**
 
+```csharp
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+Explanation:
+HSTS instructs browsers to always use HTTPS when communicating with the API.
+This prevents downgrade attacks and ensures clients never access the API
+over an unencrypted connection in production environments.
+```
 
+### 4. Secure cookies, SameSite, and HttpOnly flags
+
+**Implementation:** Not applicable
+
+**Explanation:**  
+This API uses **JWT-based stateless authentication**, 
+so no cookies or session state are used.  
+The `secure`, `sameSite`, and `httpOnly` flags 
+apply only to cookie-based authentication. 
+JWT tokens are sent in headers, so these flags are not needed.
