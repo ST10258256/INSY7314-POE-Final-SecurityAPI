@@ -1,195 +1,141 @@
 # INSY7314-POE-Final-SecurityAPI
 
 ---
-## Overview of the app
+
+## Overview of the App
+
 SecurityAPI is a web application built using:
 
-- Backend: ASP.NET Core Web API (C#)
+* **Backend:** ASP.NET Core Web API (C#)
+* **Frontend:** React + Vite
+* **Database:** MongoDB
+* **Hosting:** Render (Backend) + Local or Render (Frontend)
 
-- Frontend: React + Vite
+The system provides secure user authentication using JWT, API communication, and a React-based frontend UI.
 
-- Database: MongoDB
+## Developer Guide
 
-- Hosting: Render for the backend; local for the frontend but there is also an option for Render on frontend
-
-The system provides secure user authentication using JWT, API communication, and frontend UI.
-
-
-## Here is a guide for the devlopers on the app on how to operate: [GUIDE.md](https://github.com/ST10258256/INSY7314-POE-PART_TWO-SecurityAPI/blob/main/GUIDE.md)
+[GUIDE.md](https://github.com/ST10258256/INSY7314-POE-PART_TWO-SecurityAPI/blob/main/GUIDE.md)
 
 ---
 
 ## Features
 
-- User Authentication
-
-- JWT Token Generation and secure authorization
-
-- Cross-Origin Resource Sharing configured for HTTPS
-
-- Environment-based configuration
-
-- MongoDB integration for data storage
-
-- React + Vite frontend with secure HTTPS
-
-- Rate limiting is implemented
-
-- CSP is also Implemented
-
-- Idle session timeouts implemented for seession jacking
-
-- SonarQube was used to test security (SonarSource, 2025)
+* JWT Authentication and Authorization
+* Cross-Origin Resource Sharing (CORS) configured for HTTPS
+* Environment-based configuration
+* MongoDB integration
+* React + Vite frontend
+* Rate Limiting
+* Content Security Policy (CSP)
+* Idle session timeouts for session hijacking prevention
+* SonarQube security analysis (SonarSource, 2025)
 
 ---
 
-## How to get started using our app
+## How to Get Started
 
-1. You will have to clone or fork the repo
+1. Clone or fork the repo:
 
 ```bash
 git clone https://github.com/ST10258256/INSY7314-POE-PART_TWO-SecurityAPI.git
 ```
 
-2.The project should work from here but there since you are using local you will have to make your own certificate but the site is secure as render passes everything already with ssl, go to step 15 if you do not mind
+2. For local development, generate SSL certificates (Render handles this automatically):
 
 ```bash
-  choco install mkcert -y
+choco install mkcert -y
+mkcert -install
+cd Frontend
+mkcert localhost 127.0.0.1 ::1
 ```
 
-3. Then you will have to install it 
+3. Import your certificate:
 
-```bash
-  mkcert -install
-```
+   * Press **Windows + R → certmgr.msc**
+   * Go to **Trusted Root Certification Authorities → Certificates**
+   * **Right-click → All Tasks → Import**
+   * Find `rootCA.pem` (usually in `Users/YourUser/AppData/mkcert`)
+   * Complete the import wizard and restart your browser.
 
-4. Then in the local folders for frontend you will have make a certificate for your localhost this can be done as follows
-
-```bash
-  cd Frontend
-  mkcert locahost 127.0.0.1 :: 1
-```
-
-5. Then you have to trust the certificate you just made
-
-6. So click windows + r ; and then type in 
-
-```bash
-  certmgr.msc
-```
-
-7. You will jabe to go to the file on the left callled Trusted Root Certification Authorities.
-
-8. Right Click The certificate foolder and then all tasks and then import
-
-9. Go to where you installed the rootCA.pem and import that file. it probably be be in users/youruser/AppData/mkcert. If you are struggling to find it in that folder change the view to all files
-
-10. You will click that then press next 
-
-11. And then for the next option we will use Place all certificates in the following store in Trusted Root Certifcation Authorities
-
-12. Click next and then it should be finished
-
-13. You will have to clear your cache and restart your browser  and then it should work
-
-
-14. Once you have done these steps you will be able to run the Frontend but you can run the frontend if you don't mind the frontend Certificate issues
+4. Run the frontend:
 
 ```bash
 cd Frontend
-```
-
-15. Once you have done that you will have to run the frontend
-
-```bash
 npm run dev
 ```
 
-16. Click on the link it gives you
-    
-17. This will take you to your localhost on the webpage
+5. Click the localhost link shown in your terminal — you can now register, log in, and interact with the app.
 
-19. This is all done over ssl and the backend is being hosted over render so you will not have to run anything else
-  
-21. Now you can interact with the app and make an account; login; make payments and view the payments that you have made
+---
 
-### Running backend locally
-
-1. Follow the steps previously and once you have cloned the repo you must run your backend so use this code
+### Running Backend Locally
 
 ```bash
 cd Backend
 dotnet build
 dotnet run
-
-```
-
-2. Once this is done you will be running your backend locally instead and then you will have to follow the rest of the steps
-
-### Creating your own database
-
-If you want to make your own you will need to create a environment variable with the required information 
-
-```bash
-MONGO_URI= <connection string>
-MONGO_DATABASE_NAME=<datbase name>
-
-JWT_KEY=<yourkey>
-JWT_ISSUER=<who issued it>
-JWT_EXPIREMINUTES<giver expirey date>
 ```
 
 ---
 
-## Software used in this project
+### Environment Variables
 
-- npm
-- Render
-- Swagger
-- MongoDB
-- React + Vite
-- Docker
-- JWT
-- CSP
-- SonarQube
+If you’re creating your own MongoDB instance:
+
+```bash
+MONGO_URI=<connection string>
+MONGO_DATABASE_NAME=<database name>
+
+JWT_KEY=<your key>
+JWT_ISSUER=<issuer>
+JWT_EXPIREMINUTES=<expiry time in minutes>
+```
+
+---
+
+## Software Used
+
+* npm
+* Render
+* Swagger
+* MongoDB
+* React + Vite
+* Docker
+* JWT
+* CSP
+* SonarQube
+
+---
 
 ## Feedback Implemented
-```
-```
-### 1. Serve all traffic over SSL
 
-**Code where it happens:**
+### 1. Serve All Traffic Over SSL
 
 ```csharp
 options.ListenAnyIP(portToUse, listenOptions =>
 {
-    listenOptions.UseHttps(certificate); // HTTPS locally
+    listenOptions.UseHttps(certificate);
 });
 ```
-Explanation:
-This configuration ensures all traffic to the API is encrypted via HTTPS.
-Locally, Kestrel uses the specified SSL certificate to serve HTTPS requests.
-In production (Render), HTTPS is handled by the platform’s reverse proxy,
-ensuring secure data in transit.
 
-```
-```
+**Explanation:**
+Encrypts all API traffic over HTTPS. Render automatically enforces SSL in production.
+
+---
+
 ### 2. Redirect HTTP → HTTPS
-
-**Code where it happens:**
 
 ```csharp
 app.UseHttpsRedirection();
 ```
-Explanation:
-This middleware automatically redirects any HTTP request to HTTPS.
-This ensures that all clients connect securely and prevents unencrypted
-traffic from reaching the API.
-```
-```
-### 3. Apply HSTS (Strict Transport Security)
 
-**Code where it happens:**
+**Explanation:**
+Redirects all HTTP requests to HTTPS, blocking unencrypted communication.
+
+---
+
+### 3. Apply HSTS (Strict Transport Security)
 
 ```csharp
 if (!app.Environment.IsDevelopment())
@@ -197,61 +143,126 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 ```
-Explanation:
-HSTS instructs browsers to always use HTTPS when communicating with the API.
-This prevents downgrade attacks and ensures clients never access the API
-over an unencrypted connection in production environments.
-```
-```
-### 4. Secure cookies, SameSite, and HttpOnly flags
 
-**Implementation:** Not applicable
+**Explanation:**
+Forces browsers to only connect via HTTPS to prevent downgrade attacks.
 
-**Explanation:**  
-This API uses **JWT-based stateless authentication**, 
-so no cookies or session state are used.  
-The `secure`, `sameSite`, and `httpOnly` flags 
-apply only to cookie-based authentication. 
-JWT tokens are sent in headers, so these flags are not needed.
+---
+
+### 4. Secure Cookies, SameSite, and HttpOnly Flags
+
+**Not applicable:**
+This API uses JWT tokens in headers, not cookies.
+
+---
+
+### 5. Stricter CORS Policy
+
+```csharp
+builder.Services.AddCors(options => 
+{
+    options.AddPolicy("AllowReactLocal", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:5173", // trusted local React dev server
+            "https://localhost:5173",
+            "http://localhost:5174",
+            "https://localhost:5174",
+            "https://securityapi-x4rg.onrender.com",
+            "https://securityapi-site.onrender.com"
+        )
+        .WithHeaders("Content-Type", "Authorization") // Only allow these headers
+        .WithMethods("GET", "POST", "PATCH") // Only allow GET, POST, and PATCH requests
+        .AllowCredentials();
+    });
+});
+```
+
+**Explanation:**
+Limits access to approved domains, headers, and methods to minimize attack exposure.
+
+---
+
+### 6. HTTP Parameter Pollution (HPP) Protection
+
+```csharp
+public class HppMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public HppMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // Get query parameters and keep only the first value for duplicates
+        var query = context.Request.Query
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FirstOrDefault());
+
+        // Rebuild the query string using the cleaned parameters
+        context.Request.QueryString = new QueryString("?" + string.Join("&", 
+            query.Select(kvp => $"{kvp.Key}={kvp.Value}")
+        ));
+
+        // Continue to the next middleware
+        await _next(context);
+    }
+}
+```
+
+**Explanation:**
+Cleans duplicate query parameters before they hit the pipeline, neutralizing HPP attacks while still allowing valid queries to pass normally.
+
+---
 
 ### ADDITIONAL FEATURES
 
----
-```
-#### 1. HSTS (HTTP Strict Transport Security) Enhancement
+#### 1. Enhanced HSTS
+
 ```csharp
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts(hsts => hsts.MaxAge(days: 365).IncludeSubdomains().Preload());
 }
 ```
-What it does:
-1. Enforces HTTPS for all browser requests for 1 year.
-2. Applies to all subdomains.
-3. Signals browsers to preload this site in their HSTS lists.
-4. Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
-```
-```
+
+**What it does:**
+
+* Enforces HTTPS for a year
+* Applies to subdomains
+* Adds preload hint to browsers
+* Strengthens TLS enforcement
+
+---
+
 #### 2. Rate-Limiting Headers
+
 ```csharp
 builder.Services.AddRateLimiter(options =>
 {
-    // Custom rejection response
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = 429;
-        context.HttpContext.Response.Headers.Add("Retry-After", "300"); // seconds
+        context.HttpContext.Response.Headers.Add("Retry-After", "300");
         context.HttpContext.Response.ContentType = "application/json";
         await context.HttpContext.Response.WriteAsync("{\"message\":\"Too many requests. Please try again later.\"}", token);
     };
 });
 ```
-What it does:
-1. Limits requests to endpoints (login and register) to prevent brute-force attacks.
-2. Sends Retry-After headers to clients, indicating when they can retry.
-3. Returns a clear 429 response with a JSON message.
-4. Fully additive and does not interfere with existing JWT authentication or other middleware.
+
+**What it does:**
+
+* Limits login/register endpoint requests
+* Returns `429 Too Many Requests`
+* Includes `Retry-After` headers
+* Helps prevent brute-force attacks
+
+---
 
 ## References
-SonarSource (2025). Getting Started with SonarQube Cloud: A Developer’s Guide. [online] Sonarsource.com. Available at: https://www.sonarsource.com/resources/library/getting-started-with-sonarqube-cloud/ [Accessed 7 Nov. 2025].
 
+SonarSource (2025). *Getting Started with SonarQube Cloud: A Developer’s Guide.*
+[https://www.sonarsource.com/resources/library/getting-started-with-sonarqube-cloud/](https://www.sonarsource.com/resources/library/getting-started-with-sonarqube-cloud/)
+Accessed 7 Nov. 2025.
