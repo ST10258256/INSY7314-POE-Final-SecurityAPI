@@ -83,8 +83,7 @@ export default function PaymentForm() {
           <form onSubmit={submit}>
             <div className="row g-2">
               <div className="col-md-4">
-                <label className="form-label small">
-                  Amount
+                <label htmlFor="amount" className="form-label small">Amount</label>
                   <input
                   name="amount"
                   type="number"
@@ -93,13 +92,11 @@ export default function PaymentForm() {
                   value={form.amount}
                   onChange={onChange}
                 />
-                  </label>
                 
               </div>
 
               <div className="col-md-4">
-                <label className="form-label small">
-                  Currency
+                <label htmlFor="currency" className="form-label small">Currency</label>
                   <select
                   name="currency"
                   className="form-select"
@@ -110,15 +107,11 @@ export default function PaymentForm() {
                   <option>USD</option>
                   <option>EUR</option>
                   <option>GBP</option>
-                </select>
-                  </label>
-                
+                </select>             
               </div>
 
               <div className="col-md-4">
-                <label className="form-label small">
-                  SWIFT code
-                  <input
+                <label htmlFor="swiftCode" className="form-label small">SWIFT code<input
                   name="swiftCode"
                   className="form-control"
                   value={form.swiftCode}
@@ -131,9 +124,7 @@ export default function PaymentForm() {
 
             <div className="row g-2 mt-2">
               <div className="col-md-6">
-                <label className="form-label small">
-                  Beneficiary account number
-                  <input
+                <label htmlFor="accountNumber" className="form-label small">Beneficiary account number<input
                   name="accountNumber"
                   className="form-control"
                   value={form.accountNumber}
@@ -144,17 +135,15 @@ export default function PaymentForm() {
               </div>
 
               <div className="col-md-6">
-                <label className="form-label small">
-                  Reference (optional)
-                  <input
-                  name="reference" ////////////////
-                  className="form-control" ////////////////
-                  placeholder="Payment reference" ////////////////
-                  value={form.reference || ""} ////////////////
-                  onChange={onChange} ////////////////
-                /> {/* //////////////// */}
-                  </label> {/* //////////////// */}
-                
+                <label htmlFor="reference" className="form-label small">Reference (optional)<input
+                    name="reference"
+                    className="form-control"
+                    placeholder="Payment reference"
+                    value={form.reference || ""}
+                    onChange={onChange}
+                  />
+                  </label>
+
               </div>
             </div>
 

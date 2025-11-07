@@ -73,7 +73,7 @@ export default function Login() {
           {error && <div className="alert alert-danger">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="mb-2">
-              <label className="form-label small">Account Number</label>
+              <label htmlFor="accountNumber" className="form-label small">Account Number</label>
               <input
                 type="text"
                 name="accountNumber"
@@ -85,7 +85,7 @@ export default function Login() {
             </div>
 
             <div className="mb-2">
-              <label className="form-label small">Username</label>
+              <label htmlFor="username" className="form-label small">Username</label>
               <input
                 type="text"
                 name="username"
@@ -97,7 +97,7 @@ export default function Login() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label small">Password</label>
+              <label htmlFor="password" className="form-label small">Password</label>
               <input
                 type="password"
                 name="password"
