@@ -259,6 +259,55 @@ builder.Services.AddRateLimiter(options =>
 * Includes `Retry-After` headers
 * Helps prevent brute-force attacks
 
+
+
+
+
+
+
+
+
+
+
+  <img width="940" height="351" alt="image" src="https://github.com/user-attachments/assets/002f2085-08e0-436a-b0b7-201af34a1f53" />
+Pipeline: 
+okay so basically this is our GitHub pipeline, and it’s showing that all four checks have passed. that means everything ran successfully , no broken builds, no failed tests, no security issues detected. here’s what each one actually checks for:
+1. CodeQL / Analyze (CodeQL) (push)
+This one is a security and code analysis tool from GitHub. it scans the codebase to detect potential vulnerabilities or unsafe patterns.
+it looks for things like:
+•	SQL injections
+•	cross-site scripting (XSS)
+•	insecure data handling
+•	logic errors that could lead to security issues
+So if CodeQL passes, it basically means it didn’t find any major security red flags in your code when you pushed the commit.
+2. SonarCloud Code Analysis
+This one is about code quality and maintainability, not just security.
+SonarCloud checks for:
+•	bugs and potential runtime issues
+•	code smells (bad practices that could cause problems later)
+•	duplicated code
+•	test coverage levels
+•	and whether the code passes the “Quality Gate,” which is SonarCloud’s way of saying “your code meets the minimum quality standards.”
+since it says “Quality Gate passed,” your code met the required quality metrics ,so that’s a good sign that it’s clean, maintainable, and consistent.
+3. ci/circleci: sonarcloud-analysis
+This is the CircleCI job that actually runs the SonarCloud analysis.
+it handles the pipeline execution part , so it’s CircleCI running the analysis script that uploads results to SonarCloud. if this passed, it means the build, test, and analysis steps all completed successfully on CircleCI’s servers.
+in short, CircleCI did its job, built your code, and sent the analysis data without any errors.
+4. ci/circleci: trivy-scan
+This one uses Trivy, which is a vulnerability scanner for containers and dependencies.
+it scans your project for:
+•	known vulnerabilities in dependencies
+•	insecure or outdated packages
+•	misconfigurations in Docker images or environment files
+So when this passes, it means there are no critical or high vulnerabilities found in your dependencies or container image.
+Overall meaning:
+“All checks have passed” means your code passed all the key stages of automated quality assurance:
+•	no security issues (CodeQL)
+•	good quality code (SonarCloud)
+•	build and tests ran successfully (CircleCI)
+•	no known vulnerabilities (Trivy)
+
+
 ---
 
 ## References
