@@ -43,20 +43,7 @@ public class AuthController : ControllerBase
         if (await _userRepo.GetByAccountNumberAsync(dto.AccountNumber) != null)
             return BadRequest(new { Errors = new[] { "Account Number already exists" } });
 
-        // Business rule: password complexity
-        var passwordErrors = "";
-        if (dto.Password.Length < 8)
-            passwordErrors = passwordErrors + "Password must be at least 8 characters long";
-        if (!Regex.IsMatch(dto.Password, @"[A-Z]"))
-            passwordErrors = passwordErrors + "Password must contain at least one uppercase letter";
-        if (!Regex.IsMatch(dto.Password, @"[a-z]"))
-            passwordErrors = passwordErrors + "Password must contain at least one lowercase letter";
-        if (!Regex.IsMatch(dto.Password, @"[0-9]"))
-            passwordErrors = passwordErrors + "Password must contain at least one digit";
-        if (!Regex.IsMatch(dto.Password, @"[@$!%*?&]"))
-            passwordErrors = passwordErrors + "Password must contain at least one special character (@$!%*?&)";
-        if (!passwordErrors = null)
-            return BadRequest(new { Errors.Add(passwordErrors) });
+        
 
         // Create password hash
         PasswordHelper.CreatePasswordHash(dto.Password, out byte[] hash, out byte[] salt);
