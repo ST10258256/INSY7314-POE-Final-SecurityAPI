@@ -2,10 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-
-
 const API_BASE = "https://insy7314-poe-final-securityapi.onrender.com";
-
 
 function getPaymentId(p) {
   if (!p) return null;
@@ -25,7 +22,6 @@ export default function VerifyPayments() {
   const navigate = useNavigate();
   const token = localStorage.getItem("bank_token");
 
-  
   const apiGet = async (path) => {
     return axios.get(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
   };
@@ -35,7 +31,7 @@ export default function VerifyPayments() {
   };
 
   const friendlyError = (err) => {
-      const status = err?.response?.status;
+    const status = err?.response?.status;
     const serverMsg = err?.response?.data ?? err?.message ?? "Unknown error";
     if (status === 401) return "Unauthorized. Please login again.";
     if (status === 403) return "Forbidden. Your token may not have permission to view all payments.";
@@ -44,7 +40,7 @@ export default function VerifyPayments() {
   };
 
   const initPayment = (p) => {
-     const statusRaw = (p.status || p.Status || "").toString();
+    const statusRaw = (p.status || p.Status || "").toString();
     const normalized = statusRaw.trim().toLowerCase();
     const isProcessed = normalized === "processed";
     const isVerifiedServer = normalized === "verified";
@@ -63,7 +59,7 @@ export default function VerifyPayments() {
   const updatePaymentAt = (index, patch) =>
     setPayments(prev => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
 
-    useEffect(() => {
+  useEffect(() => {
     if (!token) {
       navigate("/login");
       return;
@@ -74,13 +70,13 @@ export default function VerifyPayments() {
       setLoading(true);
       setGlobalError(null);
       try {
-          const resp = await apiGet("/api/admin/adminpayments");
+        const resp = await apiGet("/api/admin/adminpayments");
         const data = Array.isArray(resp.data) ? resp.data : (resp.data?.payments ?? resp.data ?? []);
         const mapped = (data || []).map(initPayment);
         if (mounted) setPayments(mapped);
       } catch (err) {
         console.error("Failed to load payments:", err);
-        setGlobalError(friendlyError(err)); 
+        setGlobalError(friendlyError(err));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -89,7 +85,6 @@ export default function VerifyPayments() {
     fetchAll();
     return () => { mounted = false; };
   }, [token, navigate]);
-
 
   async function handleVerify(index) {
     updatePaymentAt(index, { __verifying: true, __verifyError: null });
@@ -112,7 +107,6 @@ export default function VerifyPayments() {
     }
 
     try {
-    
       await apiPatch(`/api/admin/adminpayments/${id}/verify`);
       updatePaymentAt(index, {
         __verifying: false,
@@ -124,12 +118,11 @@ export default function VerifyPayments() {
       console.error("Verify failed:", err);
       updatePaymentAt(index, {
         __verifying: false,
-        __verifyError: friendlyError(err) 
+        __verifyError: friendlyError(err)
       });
     }
   }
 
-  
   async function handleProcess() {
     const targets = payments.map((p, i) => ({ p, i })).filter(x => x.p.__verified && !x.p.__submitted);
 
@@ -142,10 +135,9 @@ export default function VerifyPayments() {
     setSubmitting(true);
     setGlobalError(null);
 
-   
     setPayments(prev => prev.map(p => (p.__verified && !p.__submitted ? { ...p, __processing: true, __processError: null } : p)));
 
-       const promises = targets.map(({ p, i }) => {
+    const promises = targets.map(({ p, i }) => {
       const id = getPaymentId(p);
       const path = `/api/admin/adminpayments/${id}/process`;
       return apiPatch(path)
@@ -159,7 +151,7 @@ export default function VerifyPayments() {
     let failureCount = 0;
     const failures = [];
 
-       setPayments(prev => {
+    setPayments(prev => {
       const copy = [...prev];
       results.forEach(r => {
         const idx = r.index;
@@ -209,107 +201,156 @@ export default function VerifyPayments() {
 
   const verifiedCount = payments.filter(p => p.__verified && !p.__submitted).length;
 
-   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h3 className="mb-0">Verify Pending Payments</h3>
+  return (
+    <div className="container">
+      <div className="card" style={{ padding: 18 }}>
+        <div className="d-flex align-items-center" style={{ justifyContent: "space-between", gap: 12 }}>
+          <div>
+            <h3 style={{ margin: 0 }}>Verify Pending Payments</h3>
+            <div className="muted" style={{ marginTop: 6 }}>Review and send verified payments to SWIFT</div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              className="btn-outline-secondary"
+              onClick={() => window.location.reload()}
+              style={{ minWidth: 92 }}
+            >
+              Refresh
+            </button>
+
+            <button
+              className="btn-primary"
+              disabled={verifiedCount === 0 || submitting}
+              onClick={handleProcess}
+              style={{ minWidth: 140 }}
+            >
+              {submitting ? "Processing…" : `Process${verifiedCount > 0 ? ` (${verifiedCount})` : ""}`}
+            </button>
+          </div>
         </div>
 
-        <div className="text-end">
-          <button className="btn btn-outline-secondary me-2" onClick={() => window.location.reload()}>Refresh</button>
-          <button
-            className="btn btn-success"
-            disabled={verifiedCount === 0 || submitting}
-            onClick={handleProcess}
-          >
-            {submitting ? "Processing…" : `Process${verifiedCount > 0 ? ` (${verifiedCount})` : ""}`}
-          </button>
-        </div>
-      </div>
+        {globalError && (
+          <div style={{ marginTop: 14 }}>
+            <div className="error">{globalError}</div>
+          </div>
+        )}
 
-      {globalError && <div className="alert alert-danger">{globalError}</div>}
-
-      <div className="card shadow-sm">
-        <div className="card-body p-0">
+        <div style={{ marginTop: 16 }}>
           {loading ? (
-            <div className="p-4 text-center">Loading payments…</div>
+            <div className="card" style={{ padding: 18 }}>
+              <div className="muted">Loading payments…</div>
+            </div>
           ) : payments.length === 0 ? (
-            <div className="p-4 text-center text-muted">No payments found.</div>
+            <div className="card" style={{ padding: 18 }}>
+              <div className="muted">No payments found.</div>
+            </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th style={{ width: 48 }}>#</th>
-                    <th>Payee</th>
-                    <th>Account</th>
-                    <th>Amount</th>
-                    <th>Currency</th>
-                    <th>SWIFT</th>
-                    <th>State</th>
-                    <th className="text-end">Action</th>
+            <div style={{ overflowX: "auto" }}>
+              {/* Make table text default to white using the theme token */}
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  marginTop: 6,
+                  color: "var(--text)" // <-- changed: ensure list text is white
+                }}
+              >
+                <thead>
+                  <tr style={{ textAlign: "left", color: "var(--text)" /* header white too */ }}>
+                    <th style={{ padding: "12px 8px" }}>Amount</th>
+                    <th style={{ padding: "12px 8px" }}>Currency</th>
+                    <th style={{ padding: "12px 8px" }}>SWIFT code</th>
+                    <th style={{ padding: "12px 8px" }}>Beneficiary account number</th>
+                    <th style={{ padding: "12px 8px" }}>Reference (optional)</th>
+                    <th style={{ padding: "12px 8px", textAlign: "right" }}>Action</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {payments.map((p, i) => {
                     const id = getPaymentId(p) || i;
-                    const payee = p.payeeName || p.name || p.beneficiary || (p.firstName && `${p.firstName} ${p.lastName}`) || "Unknown";
-                    const acct = p.accountNumber || p.AccountNumber || p.Account || "-";
-                    const swift = (p.swiftCode || p.SWIFTCode || p.swift || p.SWIFT || "").toString() || "-";
                     const amount = p.amount ?? p.Amount ?? p.AmountPaid ?? "-";
-                    const currency = p.currency || p.Currency || "ZAR";
+                    const currency = p.currency || p.Currency || "ZAR"; // default to ZAR if missing
+                    const swift = (p.swiftCode || p.SWIFTCode || p.swift || p.SWIFT || "").toString() || "-";
+                    // beneficiary account number - check common variants
+                    const acct = p.accountNumber || p.AccountNumber || p.Account || p.beneficiaryAccount || p.beneficiary_acct || "-";
+                    // reference - many possible keys
+                    const reference =
+                      p.reference ||
+                      p.referenceNumber ||
+                      p.paymentReference ||
+                      p.description ||
+                      p.narrative ||
+                      p.ref ||
+                      p.Remarks ||
+                      p.remark ||
+                      p.payment_note ||
+                      "";
+
                     const status = p.__submitted ? "Processed" : (p.status || p.Status || "Pending");
                     const isVerified = Boolean(p.__verified && !p.__submitted);
+                    const rowBg = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)";
 
                     return (
-                      <tr key={id}>
-                        <td>{i + 1}</td>
-
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{payee}</div>
-                          <div className="small text-muted">{p.email || p.payeeEmail || ""}</div>
+                      <tr key={id} style={{ background: rowBg }}>
+                        <td style={{ padding: "12px 8px", verticalAlign: "top", color: "var(--text)" }}>
+                          <strong>{amount}</strong>
                         </td>
 
-                        <td>
-                          <div className="small">{acct}</div>
-                          <div className="small text-muted">{p.bankName || p.bank || ""}</div>
+                        <td style={{ padding: "12px 8px", verticalAlign: "top", color: "var(--text)" }}>
+                          <div>{currency}</div>
                         </td>
 
-                        <td><strong>{amount}</strong></td>
-                        <td>{currency}</td>
-                        <td><div style={{ fontFamily: "monospace" }}>{swift}</div></td>
-
-                        <td style={{ minWidth: 160 }}>
-                          {p.__submitted ? (
-                            <span className="badge bg-success">Processed ✓</span>
-                          ) : p.__verifying ? (
-                            <span className="badge bg-info">Verifying…</span>
-                          ) : p.__processing ? (
-                            <span className="badge bg-info">Processing…</span>
-                          ) : isVerified ? (
-                            <span className="badge bg-success">Verified ✓</span>
-                          ) : (
-                            <span className="badge bg-secondary">{status}</span>
-                          )}
-
-                          {p.__verifyError && <div className="small text-danger mt-1">{p.__verifyError}</div>}
-                          {p.__processError && <div className="small text-danger mt-1">{p.__processError}</div>}
+                        <td style={{ padding: "12px 8px", verticalAlign: "top", color: "var(--text)" }}>
+                          <div style={{ fontFamily: "monospace" }}>{swift}</div>
                         </td>
 
-                        <td className="text-end">
-                          {!p.__submitted ? (
-                            <button
-                              className={`btn btn-sm ${isVerified ? "btn-success" : "btn-outline-primary"}`}
-                              onClick={() => handleVerify(i)}
-                              disabled={p.__verifying || p.__processing}
-                            >
-                              {p.__verifying ? "Verifying…" : (isVerified ? "Verified" : "Verify")}
-                            </button>
-                          ) : (
-                            <button className="btn btn-sm btn-outline-secondary" disabled>Processed</button>
-                          )}
+                        <td style={{ padding: "12px 8px", verticalAlign: "top", color: "var(--text)" }}>
+                          {/* beneficiary should be white now */}
+                          <div>{acct}</div>
+                        </td>
+
+                        <td style={{ padding: "12px 8px", verticalAlign: "top", color: "var(--text)" }}>
+                          <div>
+                            {reference ? (
+                              reference
+                            ) : (
+                              <span style={{ color: "var(--placeholder-light)" }}>—</span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td style={{ padding: "12px 8px", textAlign: "right", verticalAlign: "top", minWidth: 120 }}>
+                          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, alignItems: "center" }}>
+                            {p.__submitted ? (
+                              <span className="badge completed">Processed ✓</span>
+                            ) : p.__verifying ? (
+                              <span className="badge pending">Verifying…</span>
+                            ) : p.__processing ? (
+                              <span className="badge pending">Processing…</span>
+                            ) : isVerified ? (
+                              <span className="badge completed">Verified ✓</span>
+                            ) : (
+                              <span className="badge pending">{status}</span>
+                            )}
+
+                            {!p.__submitted ? (
+                              <button
+                                className={isVerified ? "btn-primary" : "btn-outline-secondary"}
+                                onClick={() => handleVerify(i)}
+                                disabled={p.__verifying || p.__processing}
+                                style={{ padding: "8px 12px", minWidth: 86 }}
+                              >
+                                {p.__verifying ? "Verifying…" : (isVerified ? "Verified" : "Verify")}
+                              </button>
+                            ) : (
+                              <button className="btn-outline-secondary" disabled style={{ opacity: 0.7 }}>Processed</button>
+                            )}
+                          </div>
+
+                          {p.__verifyError && <div style={{ color: "var(--accent)", marginTop: 8 }}>{p.__verifyError}</div>}
+                          {p.__processError && <div style={{ color: "#ff8a8a", marginTop: 8 }}>{p.__processError}</div>}
                         </td>
                       </tr>
                     );
@@ -321,32 +362,31 @@ export default function VerifyPayments() {
         </div>
       </div>
 
-      {/*  */}
       {modal.open && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 1050,
           display: "flex", alignItems: "center", justifyContent: "center",
           background: "rgba(0,0,0,0.45)"
         }}>
-          <div style={{ width: 420, borderRadius: 12, background: "#fff", boxShadow: "0 8px 30px rgba(0,0,0,0.25)" }}>
-            <div style={{ padding: 22 }}>
-              <h4 className="mb-2">{modal.title}</h4>
-              <p className="mb-3 text-muted">{modal.message}</p>
+          <div style={{ width: 420 }}>
+            <div className="card" style={{ borderRadius: 12, padding: 20 }}>
+              <h4 style={{ marginTop: 0 }}>{modal.title}</h4>
+              <p style={{ marginTop: 6, color: "var(--text)" }}>{modal.message}</p>
 
               {modal.details && modal.details.length > 0 && (
-                <div className="mb-3">
+                <div style={{ marginTop: 12 }}>
                   <strong>Failures:</strong>
-                  <ul>
+                  <ul style={{ marginTop: 8 }}>
                     {modal.details.map((f, idx) => (
-                      <li key={idx}><code>{f.id}</code>: {f.message}</li>
+                      <li key={idx}><code style={{ fontFamily: "monospace", color: "var(--text)" }}>{f.id}</code>: <span style={{ marginLeft: 6, color: "var(--text)" }}>{f.message}</span></li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              <div className="d-flex justify-content-end gap-2">
-                <button className="btn btn-outline-secondary" onClick={() => setModal({ open: false, title: "", message: "", details: null })}>Close</button>
-                <button className="btn btn-primary" onClick={() => setModal({ open: false, title: "", message: "", details: null })}>OK</button>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 14 }}>
+                <button className="btn-outline-secondary" onClick={() => setModal({ open: false, title: "", message: "", details: null })}>Close</button>
+                <button className="btn-primary" onClick={() => setModal({ open: false, title: "", message: "", details: null })}>OK</button>
               </div>
             </div>
           </div>
