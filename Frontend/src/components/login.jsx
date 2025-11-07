@@ -3,8 +3,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginCustomer } from "../api";
 import { validateInput, sanitizeInput } from "../utils/validation";
-import { getUserRole } from "../utils/authRole";
-import { jwtDecode } from "jwt-decode";
+import * as jwtDecode from "jwt-decode";
 
 
 export default function Login() {
