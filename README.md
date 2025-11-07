@@ -10,7 +10,7 @@ SecurityAPI is a web application built using:
 
 - Database: MongoDB
 
-- Hosting: Render for the backend; local for the frontend
+- Hosting: Render for the backend; local for the frontend but there is also an option for Render on frontend
 
 The system provides secure user authentication using JWT, API communication, and frontend UI.
 
@@ -38,6 +38,8 @@ The system provides secure user authentication using JWT, API communication, and
 - CSP is also Implemented
 
 - Idle session timeouts implemented for seession jacking
+
+- SonarQube was used to test security (SonarSource, 2025)
 
 ---
 
@@ -149,9 +151,15 @@ JWT_EXPIREMINUTES<giver expirey date>
 - Docker
 - JWT
 - CSP
+- SonarQube
 
 ##Advanced Features
 1. HTTPS makes use of TLS  to encrypt data sent between the cleint and the server to ensure privacy and protect it against eavesdropping. What our code does is enforce using only strong TLS versions and block olde versions. This means that all traffic to our API is not only served over HTTPS but also uses modern, secure encryption protocols, reducing the risk of interception or attacks that exploit weak encryption. Since we explicity configure Kestrel to allow only TLS 1.2+ and TLS 1.3, we make sre that all connections to the server have a high standard of security.
 
+
+## References
+SonarSource (2025). Getting Started with SonarQube Cloud: A Developer’s Guide. [online] Sonarsource.com. Available at: https://www.sonarsource.com/resources/library/getting-started-with-sonarqube-cloud/ [Accessed 7 Nov. 2025].
+
+‌
 
 
