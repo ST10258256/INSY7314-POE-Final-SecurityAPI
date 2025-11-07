@@ -1,33 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import { getUserRole } from "../utils/auth"; 
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 function hasValidToken() {
   const t = localStorage.getItem("bank_token");
-  // consider empty/"null"/"undefined" as no-token
   return Boolean(t && t !== "null" && t !== "undefined");
 }
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(hasValidToken());
+  const [role, setRole] = useState(getUserRole());
 
   useEffect(() => {
-    // update state once on mount (in case value changed before mount)
     setIsLoggedIn(hasValidToken());
+    setRole(getUserRole());
 
-    // handler for storage events (other tabs)
     function handleStorage() {
       setIsLoggedIn(hasValidToken());
+      setRole(getUserRole());
     }
+
     window.addEventListener("storage", handleStorage);
 
-    // lightweight poll to catch same-tab changes where storage event doesn't fire
     const interval = setInterval(() => {
-      setIsLoggedIn(prev => {
-        const now = hasValidToken();
-        return prev === now ? prev : now;
-      });
-    }, 400); // 400ms - responsive but not heavy
+      const nowLogged = hasValidToken();
+      const nowRole = getUserRole();
+      setIsLoggedIn(prev => (prev === nowLogged ? prev : nowLogged));
+      setRole(prev => (prev === nowRole ? prev : nowRole));
+    }, 400);
 
     return () => {
       window.removeEventListener("storage", handleStorage);
@@ -47,9 +48,6 @@ export default function Navbar() {
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon" />
         </button>
@@ -59,49 +57,45 @@ export default function Navbar() {
             {!isLoggedIn ? (
               <>
                 <li className="nav-item">
-                  <NavLink className="nav-link" to="/register">
-                    Register
-                  </NavLink>
+                  <NavLink className="nav-link" to="/register">Register</NavLink>
                 </li>
-
                 <li className="nav-item">
-                  <NavLink className="nav-link" to="/login">
-                    Login
-                  </NavLink>
+                  <NavLink className="nav-link" to="/login">Login</NavLink>
                 </li>
               </>
-              
             ) : (
               <>
+              {role === "User" && (
                 <li className="nav-item">
-                  <NavLink className="nav-link" to="/dashboard">
-                    Dashboard
-                  </NavLink>
+                  <NavLink className="nav-link" to="/dashboard">Dashboard</NavLink>
                 </li>
+                )}
 
+                {/* All logged-in users */}
+                {role === "User" && (
                 <li className="nav-item">
-                  <NavLink className="nav-link" to="/pay">
-                    Make Payment
-                  </NavLink>
+                  <NavLink className="nav-link" to="/pay">Make Payment</NavLink>
                 </li>
-             
+                )}
 
-                <li className="nav-item">
-      <NavLink className="nav-link" to="/create-user">Create User</NavLink>
-    </li>
+                {/* Admin only */}
+                {role === "Admin" && (
+                  <li className="nav-item">
+                    <NavLink className="nav-link" to="/create-user">Create User</NavLink>
+                  </li>
+                )}
 
-<li className="nav-item">
-  <NavLink className="nav-link" to="/verify-payments">Verify Payments</NavLink>
-</li>
-
-  </>
+                {/* Admin & Employee */}
+                {( role === "Employee") && (
+                  <li className="nav-item">
+                    <NavLink className="nav-link" to="/verify-payments">Verify Payments</NavLink>
+                  </li>
+                )}
+              </>
             )}
-            
           </ul>
         </div>
       </div>
     </nav>
   );
 }
-
-
