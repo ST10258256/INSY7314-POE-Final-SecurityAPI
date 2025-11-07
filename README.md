@@ -154,7 +154,8 @@ JWT_EXPIREMINUTES<giver expirey date>
 - SonarQube
 
 ## Feedback Implemented
-
+```
+```
 ### 1. Serve all traffic over SSL
 
 **Code where it happens:**
