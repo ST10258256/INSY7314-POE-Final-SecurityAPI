@@ -150,8 +150,19 @@ JWT_EXPIREMINUTES<giver expirey date>
 - JWT
 - CSP
 
-##Advanced Features
-1. HTTPS makes use of TLS  to encrypt data sent between the cleint and the server to ensure privacy and protect it against eavesdropping. What our code does is enforce using only strong TLS versions and block olde versions. This means that all traffic to our API is not only served over HTTPS but also uses modern, secure encryption protocols, reducing the risk of interception or attacks that exploit weak encryption. Since we explicity configure Kestrel to allow only TLS 1.2+ and TLS 1.3, we make sre that all connections to the server have a high standard of security.
+## Feedback Implemented
+
+### 1. Serve all traffic over SSL
+
+**Code Snippet:**
+
+```csharp
+options.ListenAnyIP(portToUse, listenOptions =>
+{
+    listenOptions.UseHttps(certificate); // HTTPS locally
+});
+Explanation:
+This configuration ensures all traffic to the API is encrypted via HTTPS. Locally, Kestrel uses the specified SSL certificate to serve HTTPS requests. In production (Render), HTTPS is handled by the platform’s reverse proxy, ensuring secure data in transit.
 
 
 
