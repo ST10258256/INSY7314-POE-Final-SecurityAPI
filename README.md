@@ -228,9 +228,8 @@ Signals browsers to preload this site in their HSTS lists.
 Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
 ```
 
-2. Rate-Limiting Headers
-csharp
-Copy code
+#### 2. Rate-Limiting Headers
+```csharp
 builder.Services.AddRateLimiter(options =>
 {
     // Custom rejection response
@@ -248,6 +247,6 @@ Limits requests to endpoints (login and register) to prevent brute-force attacks
 
 Sends Retry-After headers to clients, indicating when they can retry.
 
-Returns a clear 429 response with JSON message.
+Returns a clear 429 response with a JSON message.
 
 Fully additive and does not interfere with existing JWT authentication or other middleware.
