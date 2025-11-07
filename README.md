@@ -2,14 +2,14 @@
 
 ---
 
-## Overview of the app
+## Overview of the App
 
 SecurityAPI is a web application built using:
 
 * **Backend:** ASP.NET Core Web API (C#)
 * **Frontend:** React + Vite
 * **Database:** MongoDB
-* **Hosting:** Render for the backend; local for the frontend but also deployable to Render
+* **Hosting:** Render (Backend) + Local or Render (Frontend)
 
 The system provides secure user authentication using JWT, API communication, and a React-based frontend UI.
 
@@ -21,16 +21,15 @@ The system provides secure user authentication using JWT, API communication, and
 
 ## Features
 
-* User Authentication (JWT)
-* Secure Authorization
-* Cross-Origin Resource Sharing configured for HTTPS
+* JWT Authentication and Authorization
+* Cross-Origin Resource Sharing (CORS) configured for HTTPS
 * Environment-based configuration
-* MongoDB integration for data storage
-* React + Vite frontend with HTTPS support
-* Rate Limiting implemented
-* CSP (Content Security Policy) implemented
-* Idle session timeout for hijacking prevention
-* SonarQube used for vulnerability testing (SonarSource, 2025)
+* MongoDB integration
+* React + Vite frontend
+* Rate Limiting
+* Content Security Policy (CSP)
+* Idle session timeouts for session hijacking prevention
+* SonarQube security analysis (SonarSource, 2025)
 
 ---
 
@@ -42,7 +41,7 @@ The system provides secure user authentication using JWT, API communication, and
 git clone https://github.com/ST10258256/INSY7314-POE-PART_TWO-SecurityAPI.git
 ```
 
-2. If working locally, generate an SSL certificate (Render already handles this):
+2. For local development, generate SSL certificates (Render handles this automatically):
 
 ```bash
 choco install mkcert -y
@@ -51,12 +50,12 @@ cd Frontend
 mkcert localhost 127.0.0.1 ::1
 ```
 
-3. Import the certificate:
+3. Import your certificate:
 
    * Press **Windows + R → certmgr.msc**
    * Go to **Trusted Root Certification Authorities → Certificates**
    * **Right-click → All Tasks → Import**
-   * Locate your `rootCA.pem` (in `Users/YourUser/AppData/mkcert`)
+   * Find `rootCA.pem` (usually in `Users/YourUser/AppData/mkcert`)
    * Complete the import wizard and restart your browser.
 
 4. Run the frontend:
@@ -66,8 +65,7 @@ cd Frontend
 npm run dev
 ```
 
-5. Click the localhost link shown in your terminal.
-   You’ll be able to register, log in, make payments, and view them.
+5. Click the localhost link shown in your terminal — you can now register, log in, and interact with the app.
 
 ---
 
@@ -83,7 +81,7 @@ dotnet run
 
 ### Environment Variables
 
-If you create your own database:
+If you’re creating your own MongoDB instance:
 
 ```bash
 MONGO_URI=<connection string>
@@ -122,7 +120,7 @@ options.ListenAnyIP(portToUse, listenOptions =>
 ```
 
 **Explanation:**
-Ensures all traffic is encrypted via HTTPS. Locally handled by Kestrel, and in production, Render provides SSL by default.
+Encrypts all API traffic over HTTPS. Render automatically enforces SSL in production.
 
 ---
 
@@ -133,7 +131,7 @@ app.UseHttpsRedirection();
 ```
 
 **Explanation:**
-Forces all traffic to HTTPS to prevent unencrypted requests.
+Redirects all HTTP requests to HTTPS, blocking unencrypted communication.
 
 ---
 
@@ -147,20 +145,18 @@ if (!app.Environment.IsDevelopment())
 ```
 
 **Explanation:**
-Tells browsers to always connect via HTTPS, preventing downgrade attacks.
+Forces browsers to only connect via HTTPS to prevent downgrade attacks.
 
 ---
 
 ### 4. Secure Cookies, SameSite, and HttpOnly Flags
 
 **Not applicable:**
-JWT tokens are sent in headers, so cookie flags aren’t relevant.
+This API uses JWT tokens in headers, not cookies.
 
 ---
 
 ### 5. Stricter CORS Policy
-
-**Code where it happens:**
 
 ```csharp
 builder.Services.AddCors(options => 
@@ -183,38 +179,47 @@ builder.Services.AddCors(options =>
 ```
 
 **Explanation:**
-Only trusted domains, headers, and methods are allowed. This reduces the attack surface and ensures that only approved clients can communicate with the API.
+Limits access to approved domains, headers, and methods to minimize attack exposure.
 
 ---
 
 ### 6. HTTP Parameter Pollution (HPP) Protection
 
 ```csharp
-app.Use(async (context, next) =>
+public class HppMiddleware
 {
-    var query = context.Request.Query;
-    var hasDuplicateKeys = query.GroupBy(q => q.Key)
-                                .Any(g => g.Count() > 1);
+    private readonly RequestDelegate _next;
 
-    if (hasDuplicateKeys)
+    public HppMiddleware(RequestDelegate next)
     {
-        context.Response.StatusCode = 400;
-        await context.Response.WriteAsync("Bad Request - HPP detected.");
-        return;
+        _next = next;
     }
 
-    await next();
-});
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // Get query parameters and keep only the first value for duplicates
+        var query = context.Request.Query
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FirstOrDefault());
+
+        // Rebuild the query string using the cleaned parameters
+        context.Request.QueryString = new QueryString("?" + string.Join("&", 
+            query.Select(kvp => $"{kvp.Key}={kvp.Value}")
+        ));
+
+        // Continue to the next middleware
+        await _next(context);
+    }
+}
 ```
 
 **Explanation:**
-Detects and blocks duplicate query parameters to prevent HPP attacks.
+Cleans duplicate query parameters before they hit the pipeline, neutralizing HPP attacks while still allowing valid queries to pass normally.
 
 ---
 
 ### ADDITIONAL FEATURES
 
-#### 1. HSTS Enhancement
+#### 1. Enhanced HSTS
 
 ```csharp
 if (!app.Environment.IsDevelopment())
@@ -225,10 +230,10 @@ if (!app.Environment.IsDevelopment())
 
 **What it does:**
 
-* Enforces HTTPS for 1 year
+* Enforces HTTPS for a year
 * Applies to subdomains
-* Signals browsers to preload the rule
-* Adds layered protection without interfering with other security logic
+* Adds preload hint to browsers
+* Strengthens TLS enforcement
 
 ---
 
@@ -240,7 +245,7 @@ builder.Services.AddRateLimiter(options =>
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = 429;
-        context.HttpContext.Response.Headers.Add("Retry-After", "300"); // seconds
+        context.HttpContext.Response.Headers.Add("Retry-After", "300");
         context.HttpContext.Response.ContentType = "application/json";
         await context.HttpContext.Response.WriteAsync("{\"message\":\"Too many requests. Please try again later.\"}", token);
     };
@@ -249,10 +254,10 @@ builder.Services.AddRateLimiter(options =>
 
 **What it does:**
 
-* Limits requests to critical endpoints (e.g., login/register)
-* Sends `Retry-After` headers
-* Prevents brute-force attacks
-* Returns clear `429 Too Many Requests` responses
+* Limits login/register endpoint requests
+* Returns `429 Too Many Requests`
+* Includes `Retry-After` headers
+* Helps prevent brute-force attacks
 
 ---
 
