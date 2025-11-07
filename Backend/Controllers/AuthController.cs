@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { Errors = new[] { "Account Number already exists" } });
 
         // Business rule: password complexity
-        string passwordErrors = "";
+        var passwordErrors = "";
         if (dto.Password.Length < 8)
             passwordErrors = passwordErrors + "Password must be at least 8 characters long";
         if (!Regex.IsMatch(dto.Password, @"[A-Z]"))
