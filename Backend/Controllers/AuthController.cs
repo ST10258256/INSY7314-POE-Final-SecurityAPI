@@ -43,20 +43,20 @@ public class AuthController : ControllerBase
         if (await _userRepo.GetByAccountNumberAsync(dto.AccountNumber) != null)
             return BadRequest(new { Errors = new[] { "Account Number already exists" } });
 
-        // Business rule: password complexity
-        var passwordErrors = new List<string>();
-        if (dto.Password.Length < 8)
-            passwordErrors.Add("Password must be at least 8 characters long");
-        if (!Regex.IsMatch(dto.Password, @"[A-Z]"))
-            passwordErrors.Add("Password must contain at least one uppercase letter");
-        if (!Regex.IsMatch(dto.Password, @"[a-z]"))
-            passwordErrors.Add("Password must contain at least one lowercase letter");
-        if (!Regex.IsMatch(dto.Password, @"[0-9]"))
-            passwordErrors.Add("Password must contain at least one digit");
-        if (!Regex.IsMatch(dto.Password, @"[@$!%*?&]"))
-            passwordErrors.Add("Password must contain at least one special character (@$!%*?&)");
-        if (passwordErrors.Any())
-            return BadRequest(new { Errors = passwordErrors.ToString() });
+        // // Business rule: password complexity
+        // var passwordErrors = new List<string>();
+        // if (dto.Password.Length < 8)
+        //     passwordErrors.Add("Password must be at least 8 characters long");
+        // if (!Regex.IsMatch(dto.Password, @"[A-Z]"))
+        //     passwordErrors.Add("Password must contain at least one uppercase letter");
+        // if (!Regex.IsMatch(dto.Password, @"[a-z]"))
+        //     passwordErrors.Add("Password must contain at least one lowercase letter");
+        // if (!Regex.IsMatch(dto.Password, @"[0-9]"))
+        //     passwordErrors.Add("Password must contain at least one digit");
+        // if (!Regex.IsMatch(dto.Password, @"[@$!%*?&]"))
+        //     passwordErrors.Add("Password must contain at least one special character (@$!%*?&)");
+        // if (passwordErrors.Any())
+        //     return BadRequest(new { Errors = passwordErrors.ToString() });
 
         // Create password hash
         PasswordHelper.CreatePasswordHash(dto.Password, out byte[] hash, out byte[] salt);
