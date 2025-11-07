@@ -11,39 +11,37 @@ export const patterns = {
   fullName: /^[A-Za-z\s'-]{2,50}$/,   // only letters, spaces, hyphens, apostrophes
 };
 
+/**
+ * Validate input against a pattern type
+ * @param {string} value
+ * @param {string} type - key from patterns
+ * @returns {boolean}
+ */
 export function validateInput(value, type) {
   const pattern = patterns[type];
   return pattern ? pattern.test(value) : true;
 }
 
+/**
+ * Remove dangerous content from input string
+ * @param {string} value
+ * @returns {string}
+ */
 export function sanitizeInput(value) {
   if (typeof value !== "string") return value;
 
-  // Remove HTML tags completely (repeat until no matches remain)
   let sanitized = value;
-  let previousSanitizedTag;
-  do {
-    previousSanitizedTag = sanitized;
-    sanitized = sanitized.replaceAll(/<[^>]+?>/g, ""); //Should fix the backtracking issues for DoS attacks
-  } while (sanitized !== previousSanitizedTag);
 
-  // Remove any script-like patterns and executable schemes (simple XSS defense)
-  // Apply multi-character replacements repeatedly
-  let previousSanitized;
-  do {
-    previousSanitized = sanitized;
-    sanitized = sanitized
-      .replaceAll(/(?:javascript:|data:|vbscript:)/gi, "")
-      .replaceAll(/on\w+=/gi, "");
-  } while (sanitized !== previousSanitized);
+  //Remove all HTML tags
+  sanitized = sanitized.replace(/<[^>]+?>/g, "");
 
-  // Allow normal ASCII + Unicode, just remove control characters
-   sanitized = sanitized.replaceAll(/[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F]/g, "");
+  //Remove dangerous schemes and inline events (simple XSS defense)
+  sanitized = sanitized.replace(/\b(?:javascript|data|vbscript):/gi, "")
+                       .replace(/on\w+\s*=/gi, "");
 
-  // Trim whitespace
-  sanitized = sanitized.trim();
+  //Remove ASCII control characters (0x00-0x1F and 0x7F)
+  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, "");
 
-  return sanitized;
+  //Trim leading/trailing whitespace
+  return sanitized.trim();
 }
-
-
