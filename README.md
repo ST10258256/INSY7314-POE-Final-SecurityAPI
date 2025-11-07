@@ -209,13 +209,14 @@ JWT tokens are sent in headers, so these flags are not needed.
 
 ### ADDITIONAL FEATURES
 
-1. HSTS (HTTP Strict Transport Security) Enhancement
+---
+
+#### 1. HSTS (HTTP Strict Transport Security) Enhancement
+```csharp
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts(hsts => hsts.MaxAge(days: 365).IncludeSubdomains().Preload());
 }
-
-
 What it does:
 
 Enforces HTTPS for all browser requests for 1 year.
@@ -225,8 +226,11 @@ Applies to all subdomains.
 Signals browsers to preload this site in their HSTS lists.
 
 Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
+```
 
 2. Rate-Limiting Headers
+csharp
+Copy code
 builder.Services.AddRateLimiter(options =>
 {
     // Custom rejection response
@@ -238,8 +242,6 @@ builder.Services.AddRateLimiter(options =>
         await context.HttpContext.Response.WriteAsync("{\"message\":\"Too many requests. Please try again later.\"}", token);
     };
 });
-
-
 What it does:
 
 Limits requests to endpoints (login and register) to prevent brute-force attacks.
