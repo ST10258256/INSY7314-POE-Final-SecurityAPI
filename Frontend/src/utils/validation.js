@@ -38,7 +38,7 @@ export function sanitizeInput(value) {
   } while (sanitized !== previousSanitized);
 
   // Allow normal ASCII + Unicode, just remove control characters
-   sanitized = sanitized.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, "");
+   sanitized = sanitized.replaceAll(/[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F]/g, "");
 
   // Trim whitespace
   sanitized = sanitized.trim();
