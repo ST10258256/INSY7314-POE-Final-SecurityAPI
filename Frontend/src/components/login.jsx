@@ -3,6 +3,9 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginCustomer } from "../api";
 import { validateInput, sanitizeInput } from "../utils/validation";
+import { getUserRole } from "../utils/authRole";
+import { jwtDecode } from "jwt-decode";
+
 
 export default function Login() {
   const [form, setForm] = useState({ accountNumber: "", password: "", username: "" });
@@ -52,8 +55,22 @@ export default function Login() {
       }
 
       localStorage.setItem("bank_token", token);
-      if (res?.user) localStorage.setItem("bank_user", JSON.stringify(res.user));
-      navigate("/dashboard");
+        if (res?.user) localStorage.setItem("bank_user", JSON.stringify(res.user));
+
+        const decoded = jwtDecode(token);
+        const role =
+          decoded["role"] ||
+          decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+        
+        if (role === "Admin") {
+          navigate("/create-user");
+        } else if (role === "Employee") {
+          navigate("/verify-payments");
+        } else {
+          navigate("/dashboard"); 
+        }
+
     } catch (err) {
       setError(err.response?.data || err.message || "Login failed");
     } finally {
@@ -112,10 +129,6 @@ export default function Login() {
               {loading ? "Signing in…" : "Login"}
             </button>
           </form>
-
-          <div className="mt-3 text-center">
-            <Link to="/forgot-password" className="small">Forgot password?</Link>
-          </div>
         </div>
       </div>
     </div>
