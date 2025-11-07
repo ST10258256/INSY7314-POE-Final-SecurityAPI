@@ -153,13 +153,105 @@ JWT_EXPIREMINUTES<giver expirey date>
 - CSP
 - SonarQube
 
-##Advanced Features
-1. HTTPS makes use of TLS  to encrypt data sent between the cleint and the server to ensure privacy and protect it against eavesdropping. What our code does is enforce using only strong TLS versions and block olde versions. This means that all traffic to our API is not only served over HTTPS but also uses modern, secure encryption protocols, reducing the risk of interception or attacks that exploit weak encryption. Since we explicity configure Kestrel to allow only TLS 1.2+ and TLS 1.3, we make sre that all connections to the server have a high standard of security.
+## Feedback Implemented
+```
+```
+### 1. Serve all traffic over SSL
 
+**Code where it happens:**
+
+```csharp
+options.ListenAnyIP(portToUse, listenOptions =>
+{
+    listenOptions.UseHttps(certificate); // HTTPS locally
+});
+```
+Explanation:
+This configuration ensures all traffic to the API is encrypted via HTTPS.
+Locally, Kestrel uses the specified SSL certificate to serve HTTPS requests.
+In production (Render), HTTPS is handled by the platform’s reverse proxy,
+ensuring secure data in transit.
+
+```
+```
+### 2. Redirect HTTP → HTTPS
+
+**Code where it happens:**
+
+```csharp
+app.UseHttpsRedirection();
+```
+Explanation:
+This middleware automatically redirects any HTTP request to HTTPS.
+This ensures that all clients connect securely and prevents unencrypted
+traffic from reaching the API.
+```
+```
+### 3. Apply HSTS (Strict Transport Security)
+
+**Code where it happens:**
+
+```csharp
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+```
+Explanation:
+HSTS instructs browsers to always use HTTPS when communicating with the API.
+This prevents downgrade attacks and ensures clients never access the API
+over an unencrypted connection in production environments.
+```
+```
+### 4. Secure cookies, SameSite, and HttpOnly flags
+
+**Implementation:** Not applicable
+
+**Explanation:**  
+This API uses **JWT-based stateless authentication**, 
+so no cookies or session state are used.  
+The `secure`, `sameSite`, and `httpOnly` flags 
+apply only to cookie-based authentication. 
+JWT tokens are sent in headers, so these flags are not needed.
+
+### ADDITIONAL FEATURES
+
+---
+```
+#### 1. HSTS (HTTP Strict Transport Security) Enhancement
+```csharp
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts(hsts => hsts.MaxAge(days: 365).IncludeSubdomains().Preload());
+}
+```
+What it does:
+1. Enforces HTTPS for all browser requests for 1 year.
+2. Applies to all subdomains.
+3. Signals browsers to preload this site in their HSTS lists.
+4. Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
+```
+```
+#### 2. Rate-Limiting Headers
+```csharp
+builder.Services.AddRateLimiter(options =>
+{
+    // Custom rejection response
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        context.HttpContext.Response.Headers.Add("Retry-After", "300"); // seconds
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync("{\"message\":\"Too many requests. Please try again later.\"}", token);
+    };
+});
+```
+What it does:
+1. Limits requests to endpoints (login and register) to prevent brute-force attacks.
+2. Sends Retry-After headers to clients, indicating when they can retry.
+3. Returns a clear 429 response with a JSON message.
+4. Fully additive and does not interfere with existing JWT authentication or other middleware.
 
 ## References
 SonarSource (2025). Getting Started with SonarQube Cloud: A Developer’s Guide. [online] Sonarsource.com. Available at: https://www.sonarsource.com/resources/library/getting-started-with-sonarqube-cloud/ [Accessed 7 Nov. 2025].
-
-‌
-
 

@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using NWebsec.AspNetCore.Middleware;
 using Backend.Middleware;
+// i need this line to be able to pull req
 
 // Load .env file for local development
 Env.Load();
@@ -28,6 +29,7 @@ builder.Services.AddRateLimiter(options =>
         o.QueueLimit = 0;
     });
 
+
     // register only allows 3 requests every 10 minutes
     options.AddFixedWindowLimiter("register", o =>
     {
@@ -41,6 +43,7 @@ builder.Services.AddRateLimiter(options =>
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = 429;
+        context.HttpContext.Response.Headers.Add("Retry-After", "300");
         context.HttpContext.Response.ContentType = "application/json";
         await context.HttpContext.Response.WriteAsync("{\"message\":\"Too many requests. Please try again later.\"}", token);
     };
@@ -105,9 +108,6 @@ builder.WebHost.ConfigureKestrel(options =>
         options.ListenAnyIP(portToUse);
     }
 });
-
-
-
 
 //  MongoDB & Repositories 
 var mongoConnection = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
@@ -211,10 +211,6 @@ app.UseWhen(
         }
 );
 
-
-
-
-
 app.UseRateLimiter();
 
 app.UseCors("AllowReactLocal");
@@ -222,7 +218,8 @@ app.UseSecurityHeaders();
 // Middleware 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseHsts();
+    app.UseHsts(hsts => hsts.MaxAge(days: 365).IncludeSubdomains().Preload());
+
 }
 
 app.UseHttpsRedirection();
@@ -230,7 +227,6 @@ app.UseCors("AllowReactLocal");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<Backend.Middleware.SuspiciousRequestLogging>();
-
 
 app.MapControllers();
 
@@ -243,3 +239,4 @@ app.UseSwaggerUI(c =>
 });
 
 app.Run();
+// End of file, pl spick up the new chnages
