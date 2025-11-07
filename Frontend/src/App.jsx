@@ -18,6 +18,7 @@ import PaymentForm from "./pages/PaymentForm";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CreateUser from "./pages/CreateUser";
 import VerifyPayments from "./pages/VerifyPayments";
+import Welcome from "./pages/Welcome";
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
           {/* <Route path="/reset-password/:token" element={<ResetPassword />} /> */} 
           <Route path="/create-user" element={<CreateUser />} />
           <Route path="/verify-payments" element={<VerifyPayments />} />
+          <Route path="/welcome" element={<Welcome />} />
           <Route
             path="/verify-payments"
             element={
