@@ -59,7 +59,7 @@ export default function CreateUser() {
     { field: "email", kind: "email", message: "Invalid email address." },
     { field: "idNumber", kind: "idNumber", message: "Invalid ID number — 6-13 digits." },
     { field: "accountNumber", kind: "accountNumber", message: "Invalid account number — 5-15 digits." },
-    { field: "password", kind: "password", message: "Invalid password — 8+ characters." }
+    { field: "password", kind: "password", message: "Invalid password — 8+ characters." },
   ];
 
   async function handleSubmit(e) {
