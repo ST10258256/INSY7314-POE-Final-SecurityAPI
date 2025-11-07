@@ -90,7 +90,7 @@ export default function Login() {
                 type="text"
                 name="username"
                 className="form-control"
-                placeholder="Username (optional)"
+                placeholder="Username"
                 value={form.username}
                 onChange={onChange}
               />

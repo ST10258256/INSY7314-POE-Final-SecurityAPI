@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 
 [Route("api/admin/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Employee")]
 public class AdminPaymentsController : ControllerBase
 {
     private readonly PaymentRepository _paymentRepo;
