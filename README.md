@@ -161,6 +161,7 @@ options.ListenAnyIP(portToUse, listenOptions =>
 {
     listenOptions.UseHttps(certificate); // HTTPS locally
 });
+```
 Explanation:
 This configuration ensures all traffic to the API is encrypted via HTTPS.
 Locally, Kestrel uses the specified SSL certificate to serve HTTPS requests.
@@ -175,6 +176,7 @@ ensuring secure data in transit.
 
 ```csharp
 app.UseHttpsRedirection();
+```
 Explanation:
 This middleware automatically redirects any HTTP request to HTTPS.
 This ensures that all clients connect securely and prevents unencrypted
@@ -190,6 +192,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
+```
 Explanation:
 HSTS instructs browsers to always use HTTPS when communicating with the API.
 This prevents downgrade attacks and ensures clients never access the API
@@ -217,15 +220,12 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHsts(hsts => hsts.MaxAge(days: 365).IncludeSubdomains().Preload());
 }
+```
 What it does:
-
-Enforces HTTPS for all browser requests for 1 year.
-
-Applies to all subdomains.
-
-Signals browsers to preload this site in their HSTS lists.
-
-Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
+1. Enforces HTTPS for all browser requests for 1 year.
+2. Applies to all subdomains.
+3. Signals browsers to preload this site in their HSTS lists.
+4. Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
 ```
 
 #### 2. Rate-Limiting Headers
@@ -241,12 +241,9 @@ builder.Services.AddRateLimiter(options =>
         await context.HttpContext.Response.WriteAsync("{\"message\":\"Too many requests. Please try again later.\"}", token);
     };
 });
+```
 What it does:
-
-Limits requests to endpoints (login and register) to prevent brute-force attacks.
-
-Sends Retry-After headers to clients, indicating when they can retry.
-
-Returns a clear 429 response with a JSON message.
-
-Fully additive and does not interfere with existing JWT authentication or other middleware.
+1. Limits requests to endpoints (login and register) to prevent brute-force attacks.
+2. Sends Retry-After headers to clients, indicating when they can retry.
+3. Returns a clear 429 response with a JSON message.
+4. Fully additive and does not interfere with existing JWT authentication or other middleware.
