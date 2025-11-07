@@ -44,19 +44,19 @@ public class AuthController : ControllerBase
             return BadRequest(new { Errors = new[] { "Account Number already exists" } });
 
         // Business rule: password complexity
-        var passwordErrors = new List<string>();
+        string passwordErrors = "";
         if (dto.Password.Length < 8)
-            passwordErrors.Add("Password must be at least 8 characters long");
+            passwordErrors = passwordErrors + "Password must be at least 8 characters long";
         if (!Regex.IsMatch(dto.Password, @"[A-Z]"))
-            passwordErrors.Add("Password must contain at least one uppercase letter");
+            passwordErrors = passwordErrors + "Password must contain at least one uppercase letter";
         if (!Regex.IsMatch(dto.Password, @"[a-z]"))
-            passwordErrors.Add("Password must contain at least one lowercase letter");
+            passwordErrors = passwordErrors + "Password must contain at least one lowercase letter";
         if (!Regex.IsMatch(dto.Password, @"[0-9]"))
-            passwordErrors.Add("Password must contain at least one digit");
+            passwordErrors = passwordErrors + "Password must contain at least one digit";
         if (!Regex.IsMatch(dto.Password, @"[@$!%*?&]"))
-            passwordErrors.Add("Password must contain at least one special character (@$!%*?&)");
-        if (passwordErrors.Any())
-            return BadRequest(new { Errors.Add(passwordErrors.ToString())});
+            passwordErrors = passwordErrors + "Password must contain at least one special character (@$!%*?&)";
+        if (!passwordErrors = null)
+            return BadRequest(new { Errors.Add(passwordErrors) });
 
         // Create password hash
         PasswordHelper.CreatePasswordHash(dto.Password, out byte[] hash, out byte[] salt);
