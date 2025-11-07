@@ -20,7 +20,7 @@ function Field({ label, name, type = "text", placeholder = "", value, onChange }
   );
 }
 
-Field.protoTypes = {
+Field.propTypes = {
   label: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   type: PropTypes.string,
