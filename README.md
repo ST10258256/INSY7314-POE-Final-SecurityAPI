@@ -154,7 +154,7 @@ JWT_EXPIREMINUTES<giver expirey date>
 
 ### 1. Serve all traffic over SSL
 
-**Code Snippet:**
+**Code where it happens:**
 
 ```csharp
 options.ListenAnyIP(portToUse, listenOptions =>
@@ -169,10 +169,10 @@ In production (Render), HTTPS is handled by the platform’s reverse proxy,
 ensuring secure data in transit.
 
 ```
-
+```
 ### 2. Redirect HTTP → HTTPS
 
-**Code Snippet:**
+**Code where it happens:**
 
 ```csharp
 app.UseHttpsRedirection();
@@ -182,10 +182,10 @@ This middleware automatically redirects any HTTP request to HTTPS.
 This ensures that all clients connect securely and prevents unencrypted
 traffic from reaching the API.
 ```
-
+```
 ### 3. Apply HSTS (Strict Transport Security)
 
-**Code Snippet:**
+**Code where it happens:**
 
 ```csharp
 if (!app.Environment.IsDevelopment())
@@ -198,7 +198,7 @@ HSTS instructs browsers to always use HTTPS when communicating with the API.
 This prevents downgrade attacks and ensures clients never access the API
 over an unencrypted connection in production environments.
 ```
-
+```
 ### 4. Secure cookies, SameSite, and HttpOnly flags
 
 **Implementation:** Not applicable
@@ -213,7 +213,7 @@ JWT tokens are sent in headers, so these flags are not needed.
 ### ADDITIONAL FEATURES
 
 ---
-
+```
 #### 1. HSTS (HTTP Strict Transport Security) Enhancement
 ```csharp
 if (!app.Environment.IsDevelopment())
@@ -227,7 +227,7 @@ What it does:
 3. Signals browsers to preload this site in their HSTS lists.
 4. Fully additive and does not interfere with existing HTTPS, JWT, or middleware logic.
 ```
-
+```
 #### 2. Rate-Limiting Headers
 ```csharp
 builder.Services.AddRateLimiter(options =>
