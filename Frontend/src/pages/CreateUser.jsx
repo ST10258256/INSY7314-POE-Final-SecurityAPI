@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerCustomer } from "../api";
 import * as validation from "../utils/validation";
+import PropTypes from "prop-types";
 
 function Field({ label, name, type = "text", placeholder = "", value, onChange }) {
   return (
     <div className="col-md-6">
-      <label className="form-label small">{label}</label>
+      <label htmlFor={name} className="form-label small">{label}</label>
       <input
         name={name}
         type={type}
@@ -18,6 +19,15 @@ function Field({ label, name, type = "text", placeholder = "", value, onChange }
     </div>
   );
 }
+
+Field.protoTypes = {
+  label: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  type: PropTypes.string,
+  placeholder: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onChange: PropTypes.func.isRequired,
+};
 
 export default function CreateUser() {
   const initial = {

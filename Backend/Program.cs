@@ -120,7 +120,7 @@ builder.Services.AddSingleton<IMongoDbContext>(sp =>
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<PaymentRepository>();
 
-// ---------- JWT ----------
+// JWT
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")!;
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 var key = new SymmetricSecurityKey(keyBytes);
@@ -197,10 +197,18 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseCsp(options => options
-    .DefaultSources(s => s.Self())
-    .ScriptSources(s => s.Self())
-    .StyleSources(s => s.Self())
+
+app.UseWhen(
+        ContextBoundObject => !ContextBoundObject.Request.Path.StartsWithSegments("/swagger"),
+
+        appBuilder =>
+        {
+            app.UseCsp(options => options
+            .DefaultSources(s => s.Self())
+            .ScriptSources(s => s.Self())
+            .StyleSources(s => s.Self())
+            );
+        }
 );
 
 app.UseRateLimiter();

@@ -24,7 +24,7 @@ export function sanitizeInput(value) {
   let previousSanitizedTag;
   do {
     previousSanitizedTag = sanitized;
-    sanitized = sanitized.replaceAll(/<[^>]*>/g, "");
+    sanitized = sanitized.replaceAll(/<[^>]+?>/g, ""); //Should fix the backtracking issues for DoS attacks
   } while (sanitized !== previousSanitizedTag);
 
   // Remove any script-like patterns and executable schemes (simple XSS defense)
@@ -38,7 +38,7 @@ export function sanitizeInput(value) {
   } while (sanitized !== previousSanitized);
 
   // Allow normal ASCII + Unicode, just remove control characters
-  sanitized = sanitized.replaceAll(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, "");
+   sanitized = sanitized.replaceAll(/[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F]/g, "");
 
   // Trim whitespace
   sanitized = sanitized.trim();
