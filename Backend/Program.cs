@@ -189,8 +189,8 @@ builder.Services.AddCors(options =>
             "https://securityapi-x4rg.onrender.com",
             "https://securityapi-site.onrender.com"
         )
-        .WithHeaders("Content-Type", "Authorization")// Only allow these headers
-        .WithMethods("GET", "POST", "PATCH")// Only allow GET, POST, and PATCH requests
+        .WithHeaders()// Only allow these headers
+        .WithMethods()// Only allow GET, POST, and PATCH requests
         .AllowCredentials();
     });
 });
