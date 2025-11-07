@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+// Frontend/src/pages/CreateUser.jsx
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerCustomer } from "../api";
 import * as validation from "../utils/validation";
 import PropTypes from "prop-types";
+import { isAuthenticated, isAdminRole } from "../utils/auth";
 
 function Field({ label, name, type = "text", placeholder = "", value, onChange }) {
   return (
     <div className="col-md-6">
       <label htmlFor={name} className="form-label small">{label}</label>
       <input
+        id={name}
         name={name}
         type={type}
         className="form-control"
@@ -19,7 +22,7 @@ function Field({ label, name, type = "text", placeholder = "", value, onChange }
     </div>
   );
 }
-//
+
 Field.propTypes = {
   label: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
@@ -46,6 +49,19 @@ export default function CreateUser() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Client-side guard: require login + admin role
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+    if (!isAdminRole()) {
+      navigate("/dashboard");
+      return;
+    }
+    // allowed to remain on page
+  }, [navigate]);
+
   function onChange(e) {
     const { name, value } = e.target;
     const sanitizedValue = validation.sanitizeInput(value);
@@ -68,6 +84,13 @@ export default function CreateUser() {
     setSuccess("");
     setLoading(true);
 
+    // final role check (defense-in-depth)
+    if (!isAdminRole()) {
+      setError("You do not have permission to perform this action.");
+      setLoading(false);
+      return;
+    }
+
     for (const rule of validationRules) {
       const value = form[rule.field];
       if (!validation.validateInput(value, rule.kind)) {
@@ -80,12 +103,12 @@ export default function CreateUser() {
     try {
       // force role to Title-case "Employee"
       const payload = { ...form, role: "Employee" };
+      // eslint-disable-next-line no-console
       console.log("CreateUser payload ->", payload);
 
-      // await the API call but don't assign to an unused variable
       await registerCustomer(payload);
 
-      setSuccess(`User created successfully `);
+      setSuccess("User created successfully");
       setError("");
       setForm(initial);
     } catch (err) {
