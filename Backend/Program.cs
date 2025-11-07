@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using NWebsec.AspNetCore.Middleware;
 using Backend.Middleware;
+// i need this line to be able to pull req
 
 // Load .env file for local development
 Env.Load();
@@ -27,6 +28,7 @@ builder.Services.AddRateLimiter(options =>
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         o.QueueLimit = 0;
     });
+
 
     // register only allows 3 requests every 10 minutes
     options.AddFixedWindowLimiter("register", o =>
