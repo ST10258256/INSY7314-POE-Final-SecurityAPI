@@ -162,7 +162,10 @@ options.ListenAnyIP(portToUse, listenOptions =>
     listenOptions.UseHttps(certificate); // HTTPS locally
 });
 Explanation:
-This configuration ensures all traffic to the API is encrypted via HTTPS. Locally, Kestrel uses the specified SSL certificate to serve HTTPS requests. In production (Render), HTTPS is handled by the platform’s reverse proxy, ensuring secure data in transit.
+This configuration ensures all traffic to the API is encrypted via HTTPS.
+Locally, Kestrel uses the specified SSL certificate to serve HTTPS requests.
+In production (Render), HTTPS is handled by the platform’s reverse proxy,
+ensuring secure data in transit.
 
 
 
