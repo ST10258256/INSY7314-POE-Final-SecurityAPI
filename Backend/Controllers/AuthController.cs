@@ -56,7 +56,7 @@ public class AuthController : ControllerBase
         if (!Regex.IsMatch(dto.Password, @"[@$!%*?&]"))
             passwordErrors.Add("Password must contain at least one special character (@$!%*?&)");
         if (passwordErrors.Any())
-            return BadRequest(new { Error = string.Join(", ", passwordErrors) });
+            return BadRequest(new { Errors = passwordErrors.ToString() });
 
         // Create password hash
         PasswordHelper.CreatePasswordHash(dto.Password, out byte[] hash, out byte[] salt);
